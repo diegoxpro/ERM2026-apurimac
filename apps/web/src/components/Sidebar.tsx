@@ -28,7 +28,7 @@ export default function Sidebar({ rol }: { rol: RolUsuario }) {
         <span className="icono">
           <IconClipboard />
         </span>
-        Panel de Personeros
+        Panel de Administrativos
       </div>
       <nav>
         {items.map((item) => {

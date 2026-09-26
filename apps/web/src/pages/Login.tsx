@@ -44,7 +44,7 @@ export default function Login() {
           >
             <IconClipboard />
           </span>
-          <h2 style={{ margin: 0 }}>Panel de Personeros</h2>
+          <h2 style={{ margin: 0 }}>Panel de Administrativos</h2>
         </div>
         <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Conteo rápido no oficial — Apurímac 2026</p>
         {error && <div className="mensaje error">{error}</div>}
