@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
-import type { ActaSyncResult } from '@erm2026/shared';
+import type { ActaResumenDTO, ActaSyncResult, Cargo } from '@erm2026/shared';
 import type { Server as SocketIOServer } from 'socket.io';
 
 const resultadoSchema = z.object({
@@ -75,6 +75,52 @@ export function buildActasRouter(io: SocketIOServer) {
 
     const result: ActaSyncResult = { clienteId: input.clienteId, actaId: acta.id, estado: acta.estado };
     res.status(201).json(result);
+  });
+
+  // Listado de actas ya enviadas por los personeros, para revisión en el panel admin.
+  router.get('/', async (req, res) => {
+    if (!['ADMIN', 'COORDINADOR'].includes(req.usuario!.rol)) {
+      return res.status(403).json({ error: 'No tienes permiso para ver las actas' });
+    }
+    const search = String(req.query.search ?? '').trim();
+    const cargo = req.query.cargo ? (String(req.query.cargo) as Cargo) : undefined;
+    const estado = req.query.estado ? String(req.query.estado) : undefined;
+    const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 200);
+    const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
+
+    const where: any = {};
+    if (req.usuario!.rol === 'COORDINADOR') where.personero = { coordinadorId: req.usuario!.sub };
+    if (cargo) where.cargo = cargo;
+    if (estado) where.estado = estado;
+    if (search) where.mesa = { codigo: { contains: search } };
+
+    const [total, actas] = await Promise.all([
+      prisma.acta.count({ where }),
+      prisma.acta.findMany({
+        where,
+        include: { mesa: { include: { localVotacion: { include: { distrito: { include: { provincia: true } } } } } }, personero: true },
+        orderBy: { sincronizadaEn: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+    ]);
+
+    const items: ActaResumenDTO[] = actas.map((a) => ({
+      id: a.id,
+      mesaId: a.mesaId,
+      mesaCodigo: a.mesa.codigo,
+      cargo: a.cargo,
+      localVotacion: a.mesa.localVotacion.nombre,
+      distrito: a.mesa.localVotacion.distrito.nombre,
+      provincia: a.mesa.localVotacion.distrito.provincia.nombre,
+      personeroNombre: a.personero.nombre,
+      estado: a.estado,
+      digitadaEn: a.digitadaEn.toISOString(),
+      electoresHabiles: a.mesa.electores,
+      tieneFoto: !!a.fotoBase64,
+    }));
+
+    res.json({ total, items });
   });
 
   router.post('/:actaId/validar', async (req, res) => {

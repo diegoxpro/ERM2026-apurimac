@@ -67,6 +67,11 @@ export interface ActaSyncResult {
   estado: EstadoActa;
 }
 
+export interface ResultadoDetalleDTO extends ResultadoInput {
+  organizacion?: string | null;
+  simboloUrl?: string | null;
+}
+
 export interface DetalleActaDTO {
   id: string;
   estado: EstadoActa;
@@ -74,7 +79,24 @@ export interface DetalleActaDTO {
   personeroNombre: string;
   observaciones: string | null;
   fotoBase64: string | null;
-  resultados: ResultadoInput[];
+  resultados: ResultadoDetalleDTO[];
+}
+
+// --- Actas recibidas (panel admin) ---
+
+export interface ActaResumenDTO {
+  id: string;
+  mesaId: string;
+  mesaCodigo: string;
+  cargo: Cargo;
+  localVotacion: string;
+  distrito: string;
+  provincia: string;
+  personeroNombre: string;
+  estado: EstadoActa;
+  digitadaEn: string;
+  electoresHabiles: number;
+  tieneFoto: boolean;
 }
 
 // --- Usuarios ---

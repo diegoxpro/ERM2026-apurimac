@@ -212,7 +212,10 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
 mesasRouter.get('/:mesaId/actas/:cargo', async (req, res) => {
   const acta = await prisma.acta.findUnique({
     where: { mesaId_cargo: { mesaId: req.params.mesaId, cargo: req.params.cargo as Cargo } },
-    include: { resultados: true, personero: true },
+    include: {
+      resultados: { include: { listaCandidatura: { include: { organizacion: true } } } },
+      personero: true,
+    },
   });
   if (!acta) return res.status(404).json({ error: 'No hay acta registrada para ese cargo' });
   res.json({
@@ -222,6 +225,12 @@ mesasRouter.get('/:mesaId/actas/:cargo', async (req, res) => {
     personeroNombre: acta.personero.nombre,
     observaciones: acta.observaciones,
     fotoBase64: acta.fotoBase64,
-    resultados: acta.resultados.map((r) => ({ listaCandidaturaId: r.listaCandidaturaId, tipo: r.tipo, votos: r.votos })),
+    resultados: acta.resultados.map((r) => ({
+      listaCandidaturaId: r.listaCandidaturaId,
+      tipo: r.tipo,
+      votos: r.votos,
+      organizacion: r.listaCandidatura?.organizacion.nombre ?? null,
+      simboloUrl: r.listaCandidatura?.organizacion.simboloUrl ?? null,
+    })),
   });
 });

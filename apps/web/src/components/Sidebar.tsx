@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import type { RolUsuario } from '@erm2026/shared';
-import { IconChart, IconUsers, IconPin, IconEdit, IconClipboard, IconUserCheck } from './Icons';
+import { IconChart, IconUsers, IconPin, IconEdit, IconClipboard, IconUserCheck, IconFile } from './Icons';
 
 interface ItemNav {
   to: string;
@@ -15,6 +15,7 @@ const ITEMS: ItemNav[] = [
   { to: '/locales', label: 'Locales y mesas', icono: IconPin, roles: ['ADMIN', 'COORDINADOR'] },
   { to: '/asignacion', label: 'Asignación de mesas', icono: IconUserCheck, roles: ['ADMIN', 'COORDINADOR'] },
   { to: '/llenar-actas', label: 'Llenar actas', icono: IconEdit, roles: ['ADMIN', 'COORDINADOR', 'PERSONERO'] },
+  { to: '/actas', label: 'Actas recibidas', icono: IconFile, roles: ['ADMIN', 'COORDINADOR'] },
 ];
 
 export default function Sidebar({ rol }: { rol: RolUsuario }) {
