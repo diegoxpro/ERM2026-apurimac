@@ -27,9 +27,17 @@ export default defineConfig({
   ],
   optimizeDeps: {
     // @erm2026/shared es un paquete del monorepo (enlazado por workspaces) compilado
-    // a CommonJS; sin esto Vite lo sirve como archivo crudo y el navegador no puede
-    // interpretar sus "exports.x = ..." como exports nombrados de ES modules.
+    // a CommonJS; sin esto el servidor de dev lo sirve como archivo crudo y el
+    // navegador no puede interpretar sus "exports.x = ..." como exports nombrados.
     include: ['@erm2026/shared'],
+  },
+  build: {
+    commonjsOptions: {
+      // Mismo problema que optimizeDeps mas arriba, pero para el build de
+      // produccion (Rollup): por defecto solo procesa node_modules, y un
+      // paquete de workspace resuelve a su ruta real fuera de node_modules.
+      include: [/packages\/shared/, /node_modules/],
+    },
   },
   server: {
     port: 5173,
