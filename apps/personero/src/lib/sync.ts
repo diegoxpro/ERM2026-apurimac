@@ -32,12 +32,27 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
             cargo: acta.cargo,
             resultados: acta.resultados,
             observaciones: acta.observaciones,
+            fotoBase64: acta.fotoDataUrl,
             digitadaEn: acta.digitadaEn,
           }),
         });
         await db.actas.update(acta.clienteId, { estado: 'sincronizada', actaId: result.actaId, ultimoError: undefined });
         enviadas++;
       } catch (e) {
+        // Un 409 significa que ese cargo de esa mesa YA tiene acta registrada
+        // (p.ej. quedó una copia local duplicada por un doble toque en "Guardar").
+        // El servidor ya tiene el dato: lo tratamos como sincronizado, no como error,
+        // para no dejar el banner de "pendientes" atascado para siempre.
+        if (e instanceof ApiError && e.status === 409) {
+          const body = e.body as { actaId?: string; estado?: string } | undefined;
+          await db.actas.update(acta.clienteId, {
+            estado: 'sincronizada',
+            actaId: body?.actaId,
+            ultimoError: undefined,
+          });
+          enviadas++;
+          continue;
+        }
         const mensaje = e instanceof ApiError ? e.message : 'Error de red';
         await db.actas.update(acta.clienteId, { estado: 'error', ultimoError: mensaje });
         fallidas++;

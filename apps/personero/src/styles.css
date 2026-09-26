@@ -217,12 +217,14 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .fila-organizacion img, .fila-organizacion .simbolo-vacio { width: 34px; height: 34px; border-radius: 7px; object-fit: contain; background: #f4f6f5; flex-shrink: 0; }
 .nombre-organizacion { flex: 1; font-size: 13.5px; font-weight: 600; }
 
-.stepper { display: flex; align-items: center; gap: 6px; }
-.stepper button {
-  width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-borde);
-  background: #f4f6f5; font-weight: 700; cursor: pointer; padding: 0; font-size: 17px; color: var(--color-texto);
+.caja-votos {
+  width: 64px; text-align: center; padding: 10px 4px; font-size: 16px; font-weight: 700;
+  border: 1.5px solid var(--color-borde); border-radius: 8px; flex-shrink: 0;
 }
-.stepper input { width: 52px; text-align: center; padding: 6px 4px; }
+.caja-votos:focus { border-color: var(--color-primario); }
+.caja-votos::placeholder { color: #c3c8c5; font-weight: 400; }
+
+.valor-lectura { font-size: 16px; font-weight: 700; flex-shrink: 0; }
 
 .etiqueta-seccion { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; color: #6b7280; margin: 18px 0 10px; }
 
@@ -231,7 +233,13 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
   background: white; border: 1px solid var(--color-borde); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
 }
 .fila-simple label { margin: 0; font-weight: 500; font-size: 13.5px; }
-.fila-simple input { width: 76px; text-align: center; }
+
+.aviso-estado {
+  text-align: center; font-size: 13px; font-weight: 600; padding: 12px 14px; border-radius: 10px; margin-bottom: 14px;
+}
+.aviso-estado.estado-ENVIADA { background: #dbeafe; color: var(--color-info); }
+.aviso-estado.estado-VALIDADA { background: #e7f7e7; color: var(--color-exito); }
+.aviso-estado.estado-OBSERVADA { background: #fef3c7; color: var(--color-advertencia); }
 
 .fila-foto {
   width: 100%; display: flex; align-items: center; gap: 10px; background: white; border: 1px solid var(--color-borde);

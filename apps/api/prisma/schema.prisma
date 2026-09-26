@@ -140,6 +140,7 @@ model Acta {
   personero      Usuario    @relation(fields: [personeroId], references: [id])
   estado         EstadoActa @default(ENVIADA)
   observaciones  String?
+  fotoBase64     String?    @db.Text // foto del acta física, comprimida en el dispositivo antes de enviarse
   digitadaEn     DateTime
   sincronizadaEn DateTime   @default(now())
   resultados     ActaResultado[]

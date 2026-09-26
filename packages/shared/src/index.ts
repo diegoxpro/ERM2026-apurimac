@@ -57,6 +57,7 @@ export interface ActaSyncInput {
   cargo: Cargo;
   resultados: ResultadoInput[];
   observaciones?: string;
+  fotoBase64?: string; // foto del acta física, comprimida en el dispositivo antes de enviarse
   digitadaEn: string; // ISO date, hora local del dispositivo al momento de guardar
 }
 
@@ -64,6 +65,16 @@ export interface ActaSyncResult {
   clienteId: string;
   actaId: string;
   estado: EstadoActa;
+}
+
+export interface DetalleActaDTO {
+  id: string;
+  estado: EstadoActa;
+  digitadaEn: string;
+  personeroNombre: string;
+  observaciones: string | null;
+  fotoBase64: string | null;
+  resultados: ResultadoInput[];
 }
 
 // --- Usuarios ---

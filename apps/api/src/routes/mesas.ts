@@ -220,6 +220,8 @@ mesasRouter.get('/:mesaId/actas/:cargo', async (req, res) => {
     estado: acta.estado,
     digitadaEn: acta.digitadaEn,
     personeroNombre: acta.personero.nombre,
+    observaciones: acta.observaciones,
+    fotoBase64: acta.fotoBase64,
     resultados: acta.resultados.map((r) => ({ listaCandidaturaId: r.listaCandidaturaId, tipo: r.tipo, votos: r.votos })),
   });
 });

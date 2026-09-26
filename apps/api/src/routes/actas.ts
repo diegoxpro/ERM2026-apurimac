@@ -17,6 +17,7 @@ const syncSchema = z.object({
   cargo: z.enum(['GOBERNADOR_REGIONAL', 'CONSEJERO_REGIONAL', 'ALCALDE_PROVINCIAL', 'ALCALDE_DISTRITAL']),
   resultados: z.array(resultadoSchema).min(1),
   observaciones: z.string().optional(),
+  fotoBase64: z.string().optional(),
   digitadaEn: z.string(),
 });
 
@@ -45,7 +46,9 @@ export function buildActasRouter(io: SocketIOServer) {
       where: { mesaId_cargo: { mesaId: input.mesaId, cargo: input.cargo } },
     });
     if (yaRegistrada) {
-      return res.status(409).json({ error: 'Este cargo ya tiene un acta registrada para esta mesa', actaId: yaRegistrada.id });
+      return res
+        .status(409)
+        .json({ error: 'Este cargo ya tiene un acta registrada para esta mesa', actaId: yaRegistrada.id, estado: yaRegistrada.estado });
     }
 
     const acta = await prisma.acta.create({
@@ -56,6 +59,7 @@ export function buildActasRouter(io: SocketIOServer) {
         personeroId,
         estado: 'ENVIADA',
         observaciones: input.observaciones,
+        fotoBase64: input.fotoBase64,
         digitadaEn: new Date(input.digitadaEn),
         resultados: {
           create: input.resultados.map((r) => ({

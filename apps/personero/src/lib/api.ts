@@ -4,9 +4,11 @@ const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  body: unknown;
+  constructor(status: number, message: string, body?: unknown) {
     super(message);
     this.status = status;
+    this.body = body;
   }
 }
 
@@ -27,7 +29,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   const body = isJson ? await res.json() : null;
 
   if (!res.ok) {
-    throw new ApiError(res.status, body?.error ?? `Error ${res.status}`);
+    throw new ApiError(res.status, body?.error ?? `Error ${res.status}`, body);
   }
   return body as T;
 }
