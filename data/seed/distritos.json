@@ -1,0 +1,427 @@
+[
+  {
+    "provincia": "ABANCAY",
+    "distrito": "ABANCAY",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "CHACOCHE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "CIRCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "CURAHUASI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "HUANIPACA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "LAMBRAMA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "PICHIRHUA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "SAN PEDRO DE CACHORA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ABANCAY",
+    "distrito": "TAMBURCO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "ANDAHUAYLAS",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "ANDARAPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "CHIARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "HUANCARAMA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "HUANCARAY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "HUAYANA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "JOSE MARIA ARGUEDAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "KAQUIABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "KISHUARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "PACOBAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "PACUCHA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "PAMPACHIRI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "POMACOCHA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "SAN ANTONIO DE CACHI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "SAN JERONIMO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "SAN MIGUEL DE CHACCRAMPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "SANTA MARIA DE CHICMO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "TALAVERA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "TUMAY HUARACA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANDAHUAYLAS",
+    "distrito": "TURPO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "ANTABAMBA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "EL ORO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "HUAQUIRCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "JUAN ESPINOZA MEDRANO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "OROPESA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "PACHACONAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "ANTABAMBA",
+    "distrito": "SABAINO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "CAPAYA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "CARAYBAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "CHALHUANCA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "CHAPIMARCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "COLCABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "COTARUSE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "IHUAYLLO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "JUSTO APU SAHUARAURA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "LUCRE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "POCOHUANCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "SAN JUAN DE CHACÑA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "SAÑAYCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "SORAYA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "TAPAIRIHUA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "TINTAY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "TORAYA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "AYMARAES",
+    "distrito": "YANACA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "AHUAYRO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "ANCO HUALLO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "CHINCHEROS",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "COCHARCAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "EL PORVENIR",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "HUACCANA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "LOS CHANKAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "OCOBAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "ONGOY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "RANRACANCHA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "ROCCHACC",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHINCHEROS",
+    "distrito": "URANMARCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "CHALLHUAHUACHO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "COTABAMBAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "COYLLURQUI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "HAQUIRA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "MARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "COTABAMBAS",
+    "distrito": "TAMBOBAMBA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "CHUQUIBAMBILLA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "CURASCO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "CURPAHUASI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "HUAILLATI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "MAMARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "MARISCAL GAMARRA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "MICAELA BASTIDAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "PATAYPAMPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "PROGRESO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "SAN ANTONIO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "SANTA ROSA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "TURPAY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "VILCABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "GRAU",
+    "distrito": "VIRUNDO",
+    "capitalDeProvincia": false
+  }
+]

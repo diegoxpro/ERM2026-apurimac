@@ -1,0 +1,19 @@
+{
+  "name": "erm2026-apurimac",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sistema de conteo rápido no oficial - Elecciones Regionales y Municipales 2026, región Apurímac",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "data/scripts"
+  ],
+  "scripts": {
+    "postinstall": "npm run build -w packages/shared",
+    "build:shared": "npm run build -w packages/shared",
+    "dev:api": "npm run build:shared && npm run dev -w apps/api",
+    "dev:web": "npm run build:shared && npm run dev -w apps/web",
+    "import:data": "node data/scripts/parse-workbooks.js",
+    "db:seed": "npm run seed -w apps/api"
+  }
+}

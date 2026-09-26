@@ -1,0 +1,114 @@
+[
+  {
+    "nombre": "ACCION POPULAR",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/4",
+    "listasRegionales": 1,
+    "listasProvinciales": 7,
+    "listasDistritales": 67
+  },
+  {
+    "nombre": "AHORA NACION - AN",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2980",
+    "listasRegionales": 1,
+    "listasProvinciales": 7,
+    "listasDistritales": 72
+  },
+  {
+    "nombre": "ALIANZA ELECTORAL VENCEREMOS",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/3028",
+    "listasRegionales": 0,
+    "listasProvinciales": 2,
+    "listasDistritales": 15
+  },
+  {
+    "nombre": "ALIANZA PARA EL PROGRESO",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/1257",
+    "listasRegionales": 0,
+    "listasProvinciales": 5,
+    "listasDistritales": 44
+  },
+  {
+    "nombre": "AVANZA PAIS - PARTIDO DE INTEGRACION SOCIAL",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2173",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 1
+  },
+  {
+    "nombre": "FRENTE POPULAR AGRICOLA FIA DEL PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2901",
+    "listasRegionales": 0,
+    "listasProvinciales": 2,
+    "listasDistritales": 2
+  },
+  {
+    "nombre": "JUNTOS POR EL PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/1264",
+    "listasRegionales": 1,
+    "listasProvinciales": 2,
+    "listasDistritales": 2
+  },
+  {
+    "nombre": "LIBERTAD POPULAR",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2933",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 1
+  },
+  {
+    "nombre": "PARTIDO DEMOCRATA UNIDO PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2867",
+    "listasRegionales": 1,
+    "listasProvinciales": 1,
+    "listasDistritales": 0
+  },
+  {
+    "nombre": "PARTIDO DEMOCRATA VERDE",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2895",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 5
+  },
+  {
+    "nombre": "PARTIDO DEMOCRATICO SOMOS PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/14",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 2
+  },
+  {
+    "nombre": "PARTIDO FRENTE DE LA ESPERANZA 2021",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2857",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 1
+  },
+  {
+    "nombre": "PARTIDO POLITICO PERU PRIMERO",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2925",
+    "listasRegionales": 0,
+    "listasProvinciales": 1,
+    "listasDistritales": 15
+  },
+  {
+    "nombre": "PODEMOS PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2731",
+    "listasRegionales": 0,
+    "listasProvinciales": 3,
+    "listasDistritales": 20
+  },
+  {
+    "nombre": "PROGRESEMOS",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2967",
+    "listasRegionales": 1,
+    "listasProvinciales": 7,
+    "listasDistritales": 73
+  },
+  {
+    "nombre": "RENOVACION POPULAR PERU",
+    "simboloUrl": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/3040",
+    "listasRegionales": 0,
+    "listasProvinciales": 0,
+    "listasDistritales": 2
+  }
+]

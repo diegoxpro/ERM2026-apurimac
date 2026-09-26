@@ -1,0 +1,13 @@
+{
+  "name": "@erm2026/data-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scripts de importación del padrón de mesas y cédulas de sufragio de Apurímac 2026",
+  "main": "parse-workbooks.js",
+  "scripts": {
+    "parse": "node parse-workbooks.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

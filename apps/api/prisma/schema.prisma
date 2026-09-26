@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolUsuario {
+  ADMIN
+  SUPERVISOR
+  DIGITADOR
+}
+
+enum Cargo {
+  GOBERNADOR_REGIONAL
+  CONSEJERO_REGIONAL
+  ALCALDE_PROVINCIAL
+  ALCALDE_DISTRITAL
+}
+
+enum EstadoActa {
+  PENDIENTE
+  DIGITADA
+  OBSERVADA
+}
+
+enum TipoResultado {
+  VOTO_LISTA
+  BLANCO
+  NULO
+  IMPUGNADO
+}
+
+model Usuario {
+  id           String     @id @default(uuid())
+  nombre       String
+  dni          String     @unique
+  email        String?    @unique
+  passwordHash String
+  rol          RolUsuario
+  activo       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  actas        Acta[]
+}
+
+model Provincia {
+  id        String     @id @default(uuid())
+  nombre    String     @unique
+  distritos Distrito[]
+}
+
+model Distrito {
+  id                 String    @id @default(uuid())
+  nombre             String
+  capitalDeProvincia Boolean   @default(false)
+  provinciaId        String
+  provincia          Provincia @relation(fields: [provinciaId], references: [id])
+  localesVotacion    LocalVotacion[]
+
+  @@unique([provinciaId, nombre])
+}
+
+model LocalVotacion {
+  id          String   @id @default(uuid())
+  codigo      String   @unique
+  nombre      String
+  direccion   String?
+  distritoId  String
+  distrito    Distrito @relation(fields: [distritoId], references: [id])
+  mesas       Mesa[]
+}
+
+model Mesa {
+  id                     String        @id @default(uuid())
+  codigo                 String        @unique
+  aula                   String?
+  piso                   String?
+  pabellon               String?
+  electores              Int           @default(0)
+  electoresDiscapacidad  Int           @default(0)
+  localVotacionId        String
+  localVotacion          LocalVotacion @relation(fields: [localVotacionId], references: [id])
+  acta                   Acta?
+}
+
+model OrganizacionPolitica {
+  id         String   @id @default(uuid())
+  nombre     String   @unique
+  simboloUrl String?
+  listas     ListaCandidatura[]
+}
+
+// Una lista de candidatura representa a una organización política compitiendo
+// por un cargo, en un alcance geográfico específico (región, provincia o distrito).
+model ListaCandidatura {
+  id              String     @id @default(uuid())
+  cargo           Cargo
+  organizacionId  String
+  organizacion    OrganizacionPolitica @relation(fields: [organizacionId], references: [id])
+  // Alcance: cadena vacía "" significa "no aplica" para ese nivel. Se usan valores
+  // no nulos (en vez de NULL) porque una clave única compuesta con columnas NULL
+  // no se comporta como esperamos en Postgres/Prisma (NULL nunca es igual a NULL).
+  // GOBERNADOR_REGIONAL -> ambos "" (alcance regional completo)
+  // CONSEJERO_REGIONAL / ALCALDE_PROVINCIAL -> provinciaNombre, distritoNombre=""
+  // ALCALDE_DISTRITAL -> provinciaNombre + distritoNombre
+  provinciaNombre String @default("")
+  distritoNombre  String @default("")
+  orden           Int
+  expediente      String?
+  jee             String?
+  resultados      ActaResultado[]
+
+  @@unique([cargo, provinciaNombre, distritoNombre, organizacionId])
+}
+
+model Acta {
+  id            String     @id @default(uuid())
+  clienteId     String     @unique // id generado offline en el dispositivo, para idempotencia de sync
+  mesaId        String     @unique
+  mesa          Mesa       @relation(fields: [mesaId], references: [id])
+  digitadorId   String
+  digitador     Usuario    @relation(fields: [digitadorId], references: [id])
+  estado        EstadoActa @default(DIGITADA)
+  observaciones String?
+  digitadaEn    DateTime
+  sincronizadaEn DateTime  @default(now())
+  resultados    ActaResultado[]
+}
+
+model ActaResultado {
+  id                 String            @id @default(uuid())
+  actaId             String
+  acta               Acta              @relation(fields: [actaId], references: [id], onDelete: Cascade)
+  cargo              Cargo
+  listaCandidaturaId String?
+  listaCandidatura   ListaCandidatura? @relation(fields: [listaCandidaturaId], references: [id])
+  tipo               TipoResultado
+  votos              Int
+
+  @@index([actaId])
+  @@index([cargo])
+}
