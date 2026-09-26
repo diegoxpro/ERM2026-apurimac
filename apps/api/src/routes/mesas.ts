@@ -17,10 +17,12 @@ mesasRouter.get('/', async (req, res) => {
   const provincia = req.query.provincia ? String(req.query.provincia) : undefined;
   const distrito = req.query.distrito ? String(req.query.distrito) : undefined;
   const localVotacionId = req.query.localId ? String(req.query.localId) : undefined;
+  const soloPropias = req.query.mine === 'true';
   const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 500);
   const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
 
   const where: any = {};
+  if (soloPropias) where.personeroId = req.usuario!.sub;
   if (search) {
     where.OR = [
       { codigo: { contains: search } },

@@ -44,5 +44,19 @@ services:
     ports:
       - '${WEB_PORT:-1158}:80'
 
+  # App móvil (PWA) exclusiva para personeros, en su propio dominio
+  # (p.ej. votos.aricast.lat) pero contra la misma API/base de datos.
+  personero:
+    build:
+      context: .
+      dockerfile: apps/personero/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '${PERSONERO_PORT:-1159}:80'
+
 volumes:
   db_data:
