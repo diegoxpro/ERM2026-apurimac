@@ -1,4 +1,6 @@
 FROM node:20-alpine AS base
+# El motor de Prisma necesita OpenSSL; node:20-alpine no lo trae instalado.
+RUN apk add --no-cache openssl
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
