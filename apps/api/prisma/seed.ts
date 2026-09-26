@@ -164,35 +164,36 @@ async function main() {
     update: {},
     create: {
       dni: '00000001',
-      nombre: 'Administrador',
+      nombre: 'Administrador General',
       email: 'admin@erm2026.local',
       passwordHash,
       rol: 'ADMIN',
     },
   });
-  await prisma.usuario.upsert({
+  const coordinador = await prisma.usuario.upsert({
     where: { dni: '00000002' },
     update: {},
     create: {
       dni: '00000002',
-      nombre: 'Supervisor Apurímac',
-      email: 'supervisor@erm2026.local',
+      nombre: 'Coordinador Apurímac',
+      email: 'coordinador@erm2026.local',
       passwordHash,
-      rol: 'SUPERVISOR',
+      rol: 'COORDINADOR',
     },
   });
   await prisma.usuario.upsert({
     where: { dni: '00000003' },
-    update: {},
+    update: { coordinadorId: coordinador.id },
     create: {
       dni: '00000003',
-      nombre: 'Digitador de Prueba',
-      email: 'digitador@erm2026.local',
+      nombre: 'Personero de Prueba',
+      email: 'personero@erm2026.local',
       passwordHash,
-      rol: 'DIGITADOR',
+      rol: 'PERSONERO',
+      coordinadorId: coordinador.id,
     },
   });
-  console.log('  usuarios admin/supervisor/digitador con contraseña "cambiar123" (cámbiala antes de producción)');
+  console.log('  usuarios admin/coordinador/personero con contraseña "cambiar123" (cámbiala antes de producción)');
 
   console.log('\nSeed completado.');
 }

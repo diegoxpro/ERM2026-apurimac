@@ -11,7 +11,7 @@ interface UsuarioSesion {
 interface AuthContextValue {
   usuario: UsuarioSesion | null;
   cargando: boolean;
-  login: (dni: string, password: string) => Promise<void>;
+  login: (dni: string, password: string) => Promise<UsuarioSesion>;
   logout: () => void;
 }
 
@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, res.token);
     localStorage.setItem(USUARIO_KEY, JSON.stringify(res.usuario));
     setUsuario(res.usuario);
+    return res.usuario;
   }
 
   function logout() {

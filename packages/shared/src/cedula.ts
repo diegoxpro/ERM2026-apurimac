@@ -65,7 +65,7 @@ export function construirColumnasCedula(mesa: MesaCatalogoItem, listas: ListaCat
       .filter(def.filtro)
       .sort((a, b) => a.orden - b.orden)
       .map((l) => ({ id: l.id, cargo: def.cargo, organizacion: l.organizacion, simboloUrl: l.simboloUrl, orden: l.orden }));
-    columnas.push({ cargo: def.cargo, titulo: def.titulo, listas: listasCol });
+    columnas.push({ cargo: def.cargo, titulo: def.titulo, listas: listasCol, estado: 'SIN_REGISTRAR', actaId: null });
   }
 
   return columnas;

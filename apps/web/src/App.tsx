@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './lib/auth';
+import Sidebar from './components/Sidebar';
+import { IconLogout } from './components/Icons';
 import Login from './pages/Login';
-import Digitador from './pages/Digitador';
-import Supervisor from './pages/Supervisor';
+import LlenarActas from './pages/LlenarActas';
+import Resultados from './pages/Resultados';
+import Usuarios from './pages/Usuarios';
+import LocalesYMesas from './pages/LocalesYMesas';
 
 function useEnLinea() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -20,51 +24,55 @@ function useEnLinea() {
   return enLinea;
 }
 
-function Layout({ children }: { children: React.ReactNode }) {
+const ROL_LABEL: Record<string, string> = {
+  ADMIN: 'Administrador global',
+  COORDINADOR: 'Coordinador',
+  PERSONERO: 'Personero',
+};
+
+function iniciales(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/);
+  return ((partes[0]?.[0] ?? '') + (partes[1]?.[0] ?? '')).toUpperCase();
+}
+
+function Layout({ children }: { children: ReactNode }) {
   const { usuario, logout } = useAuth();
   const enLinea = useEnLinea();
-  const location = useLocation();
+  if (!usuario) return null;
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div>
-          <h1>ERM2026 Apurímac — Conteo Rápido</h1>
-          {usuario && <div className="usuario">{usuario.nombre} · {usuario.rol}</div>}
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+    <div className="app-shell-sidebar">
+      <Sidebar rol={usuario.rol} />
+      <div className="main-area">
+        <header className="topbar">
           <span className={`badge-conexion ${enLinea ? 'online' : 'offline'}`}>
             {enLinea ? 'En línea' : 'Sin conexión'}
           </span>
-          {usuario && (
-            <button className="secundario" style={{ width: 'auto' }} onClick={logout}>
-              Salir
-            </button>
-          )}
-        </div>
-      </header>
-      <div className="contenido">
-        {usuario?.rol === 'SUPERVISOR' || usuario?.rol === 'ADMIN' ? (
-          <nav className="tabs">
-            <Link className={location.pathname === '/digitador' ? 'activo' : ''} to="/digitador">
-              Digitar acta
-            </Link>
-            <Link className={location.pathname === '/supervisor' ? 'activo' : ''} to="/supervisor">
-              Dashboard
-            </Link>
-          </nav>
-        ) : null}
-        {children}
+          <div className="usuario-info">
+            <div className="nombre">{usuario.nombre}</div>
+            <div className="rol">{ROL_LABEL[usuario.rol] ?? usuario.rol}</div>
+          </div>
+          <div className="avatar">{iniciales(usuario.nombre)}</div>
+          <button className="icon-btn" onClick={logout} title="Salir">
+            <IconLogout />
+          </button>
+        </header>
+        <div className="page">{children}</div>
       </div>
     </div>
   );
 }
 
-function RutaPrivada({ children }: { children: React.ReactNode }) {
+function RutaPrivada({ children }: { children: ReactNode }) {
   const { usuario, cargando } = useAuth();
   if (cargando) return null;
   if (!usuario) return <Navigate to="/login" replace />;
   return <Layout>{children}</Layout>;
+}
+
+function rutaInicial(rol?: string): string {
+  if (rol === 'PERSONERO') return '/llenar-actas';
+  return '/resultados';
 }
 
 export default function App() {
@@ -73,24 +81,40 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={usuario ? <Navigate to="/digitador" replace /> : <Login />} />
+      <Route path="/login" element={usuario ? <Navigate to={rutaInicial(usuario.rol)} replace /> : <Login />} />
       <Route
-        path="/digitador"
+        path="/resultados"
         element={
           <RutaPrivada>
-            <Digitador />
+            <Resultados />
           </RutaPrivada>
         }
       />
       <Route
-        path="/supervisor"
+        path="/usuarios"
         element={
           <RutaPrivada>
-            <Supervisor />
+            <Usuarios />
           </RutaPrivada>
         }
       />
-      <Route path="*" element={<Navigate to={usuario ? '/digitador' : '/login'} replace />} />
+      <Route
+        path="/locales"
+        element={
+          <RutaPrivada>
+            <LocalesYMesas />
+          </RutaPrivada>
+        }
+      />
+      <Route
+        path="/llenar-actas"
+        element={
+          <RutaPrivada>
+            <LlenarActas />
+          </RutaPrivada>
+        }
+      />
+      <Route path="*" element={<Navigate to={usuario ? rutaInicial(usuario.rol) : '/login'} replace />} />
     </Routes>
   );
 }

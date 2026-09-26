@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum RolUsuario {
-  ADMIN
-  SUPERVISOR
-  DIGITADOR
+  ADMIN        // Administrador global
+  COORDINADOR
+  PERSONERO
 }
 
 enum Cargo {
@@ -20,9 +20,11 @@ enum Cargo {
   ALCALDE_DISTRITAL
 }
 
+// No existe un estado "pendiente": mientras no se guarde un Acta para un
+// (mesa, cargo), simplemente no hay fila — eso ES "sin registrar".
 enum EstadoActa {
-  PENDIENTE
-  DIGITADA
+  ENVIADA
+  VALIDADA
   OBSERVADA
 }
 
@@ -34,15 +36,23 @@ enum TipoResultado {
 }
 
 model Usuario {
-  id           String     @id @default(uuid())
-  nombre       String
-  dni          String     @unique
-  email        String?    @unique
-  passwordHash String
-  rol          RolUsuario
-  activo       Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  actas        Acta[]
+  id            String     @id @default(uuid())
+  nombre        String
+  dni           String     @unique
+  email         String?    @unique
+  telefono      String?
+  passwordHash  String
+  rol           RolUsuario
+  activo        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+
+  // Un personero depende de un coordinador (jerarquía a un solo nivel).
+  coordinadorId String?
+  coordinador   Usuario?   @relation("Jerarquia", fields: [coordinadorId], references: [id])
+  personeros    Usuario[]  @relation("Jerarquia")
+
+  actas         Acta[]
+  mesasAsignadas Mesa[]
 }
 
 model Provincia {
@@ -82,7 +92,9 @@ model Mesa {
   electoresDiscapacidad  Int           @default(0)
   localVotacionId        String
   localVotacion          LocalVotacion @relation(fields: [localVotacionId], references: [id])
-  acta                   Acta?
+  personeroId            String?
+  personero              Usuario?      @relation(fields: [personeroId], references: [id])
+  actas                  Acta[]
 }
 
 model OrganizacionPolitica {
@@ -115,30 +127,34 @@ model ListaCandidatura {
   @@unique([cargo, provinciaNombre, distritoNombre, organizacionId])
 }
 
+// Una Acta cubre UN cargo de UNA mesa (así se cuenta y se revisa en la
+// práctica: el personero llena Gobernador, Consejero, Alcalde provincial y
+// -si aplica- Alcalde distrital como actas independientes de la misma mesa).
 model Acta {
-  id            String     @id @default(uuid())
-  clienteId     String     @unique // id generado offline en el dispositivo, para idempotencia de sync
-  mesaId        String     @unique
-  mesa          Mesa       @relation(fields: [mesaId], references: [id])
-  digitadorId   String
-  digitador     Usuario    @relation(fields: [digitadorId], references: [id])
-  estado        EstadoActa @default(DIGITADA)
-  observaciones String?
-  digitadaEn    DateTime
-  sincronizadaEn DateTime  @default(now())
-  resultados    ActaResultado[]
+  id             String     @id @default(uuid())
+  clienteId      String     @unique // id generado offline en el dispositivo, para idempotencia de sync
+  mesaId         String
+  mesa           Mesa       @relation(fields: [mesaId], references: [id])
+  cargo          Cargo
+  personeroId    String
+  personero      Usuario    @relation(fields: [personeroId], references: [id])
+  estado         EstadoActa @default(ENVIADA)
+  observaciones  String?
+  digitadaEn     DateTime
+  sincronizadaEn DateTime   @default(now())
+  resultados     ActaResultado[]
+
+  @@unique([mesaId, cargo])
 }
 
 model ActaResultado {
   id                 String            @id @default(uuid())
   actaId             String
   acta               Acta              @relation(fields: [actaId], references: [id], onDelete: Cascade)
-  cargo              Cargo
   listaCandidaturaId String?
   listaCandidatura   ListaCandidatura? @relation(fields: [listaCandidaturaId], references: [id])
   tipo               TipoResultado
   votos              Int
 
   @@index([actaId])
-  @@index([cargo])
 }

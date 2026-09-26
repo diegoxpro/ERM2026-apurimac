@@ -12,9 +12,10 @@ export type Cargo =
   | 'ALCALDE_PROVINCIAL'
   | 'ALCALDE_DISTRITAL';
 
-export type RolUsuario = 'ADMIN' | 'SUPERVISOR' | 'DIGITADOR';
+export type RolUsuario = 'ADMIN' | 'COORDINADOR' | 'PERSONERO';
 
-export type EstadoActa = 'PENDIENTE' | 'DIGITADA' | 'OBSERVADA';
+export type EstadoActa = 'ENVIADA' | 'VALIDADA' | 'OBSERVADA';
+export type EstadoCargoMesa = 'SIN_REGISTRAR' | EstadoActa;
 
 export type TipoResultado = 'VOTO_LISTA' | 'BLANCO' | 'NULO' | 'IMPUGNADO';
 
@@ -30,6 +31,8 @@ export interface ColumnaCedulaDTO {
   cargo: Cargo;
   titulo: string;
   listas: ListaCandidaturaDTO[];
+  estado: EstadoCargoMesa;
+  actaId: string | null;
 }
 
 export interface CedulaMesaDTO {
@@ -43,7 +46,6 @@ export interface CedulaMesaDTO {
 }
 
 export interface ResultadoInput {
-  cargo: Cargo;
   listaCandidaturaId: string | null;
   tipo: TipoResultado;
   votos: number;
@@ -52,7 +54,7 @@ export interface ResultadoInput {
 export interface ActaSyncInput {
   clienteId: string; // id generado en el dispositivo (uuid) para idempotencia
   mesaId: string;
-  digitadorId: string;
+  cargo: Cargo;
   resultados: ResultadoInput[];
   observaciones?: string;
   digitadaEn: string; // ISO date, hora local del dispositivo al momento de guardar
@@ -64,25 +66,109 @@ export interface ActaSyncResult {
   estado: EstadoActa;
 }
 
+// --- Usuarios ---
+
+export interface UsuarioDTO {
+  id: string;
+  nombre: string;
+  dni: string;
+  email: string | null;
+  telefono: string | null;
+  rol: RolUsuario;
+  activo: boolean;
+  coordinadorId: string | null;
+  coordinadorNombre: string | null;
+  createdAt: string;
+}
+
+export interface CrearUsuarioInput {
+  nombre: string;
+  dni: string;
+  email?: string;
+  telefono?: string;
+  rol: RolUsuario;
+  password: string;
+  coordinadorId?: string | null;
+}
+
+export interface ActualizarUsuarioInput {
+  nombre?: string;
+  email?: string;
+  telefono?: string;
+  activo?: boolean;
+  coordinadorId?: string | null;
+  password?: string;
+}
+
+// --- Locales y mesas ---
+
+export interface LocalDTO {
+  id: string;
+  codigo: string;
+  nombre: string;
+  direccion: string | null;
+  distrito: string;
+  provincia: string;
+  totalMesas: number;
+}
+
+export interface CrearLocalInput {
+  codigo: string;
+  nombre: string;
+  direccion?: string;
+  provincia: string;
+  distrito: string;
+}
+
+export interface MesaDTO {
+  id: string;
+  codigo: string;
+  electores: number;
+  electoresDiscapacidad: number;
+  personeroId: string | null;
+  personeroNombre: string | null;
+}
+
+export interface CrearMesaInput {
+  codigo: string;
+  electores: number;
+  electoresDiscapacidad?: number;
+  personeroId?: string | null;
+}
+
+// --- Resultados / dashboard ---
+
+export interface ResultadoOrganizacionDTO {
+  organizacion: string;
+  simboloUrl: string | null;
+  votos: number;
+  porcentaje: number;
+}
+
+export interface ResultadosPorCargoDTO {
+  cargo: Cargo;
+  titulo: string;
+  organizaciones: ResultadoOrganizacionDTO[];
+  validos: number;
+  blancos: number;
+  nulos: number;
+  impugnados: number;
+}
+
 export interface AvanceProvinciaDTO {
   provincia: string;
   totalMesas: number;
   mesasDigitadas: number;
 }
 
-export interface ResumenGobernadorDTO {
-  organizacion: string;
-  simboloUrl: string | null;
-  votos: number;
-}
-
-export interface DashboardResumenDTO {
-  totalMesas: number;
-  mesasDigitadas: number;
-  porcentajeAvance: number;
+export interface ResultadosResumenDTO {
+  actasRecibidas: number;
+  actasEsperadas: number;
+  validadas: number;
+  mesasCubiertas: number;
+  personerosActivos: number;
+  incidencias: number;
+  incidenciasAltas: number;
   avancePorProvincia: AvanceProvinciaDTO[];
-  resultadosGobernadorRegional: ResumenGobernadorDTO[];
-  totalBlancos: number;
-  totalNulos: number;
-  totalImpugnados: number;
+  porCargo: ResultadosPorCargoDTO[];
 }

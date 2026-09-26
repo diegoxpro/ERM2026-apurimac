@@ -1,11 +1,11 @@
 -- CreateEnum
-CREATE TYPE "RolUsuario" AS ENUM ('ADMIN', 'SUPERVISOR', 'DIGITADOR');
+CREATE TYPE "RolUsuario" AS ENUM ('ADMIN', 'COORDINADOR', 'PERSONERO');
 
 -- CreateEnum
 CREATE TYPE "Cargo" AS ENUM ('GOBERNADOR_REGIONAL', 'CONSEJERO_REGIONAL', 'ALCALDE_PROVINCIAL', 'ALCALDE_DISTRITAL');
 
 -- CreateEnum
-CREATE TYPE "EstadoActa" AS ENUM ('PENDIENTE', 'DIGITADA', 'OBSERVADA');
+CREATE TYPE "EstadoActa" AS ENUM ('ENVIADA', 'VALIDADA', 'OBSERVADA');
 
 -- CreateEnum
 CREATE TYPE "TipoResultado" AS ENUM ('VOTO_LISTA', 'BLANCO', 'NULO', 'IMPUGNADO');
@@ -16,10 +16,12 @@ CREATE TABLE "Usuario" (
     "nombre" TEXT NOT NULL,
     "dni" TEXT NOT NULL,
     "email" TEXT,
+    "telefono" TEXT,
     "passwordHash" TEXT NOT NULL,
     "rol" "RolUsuario" NOT NULL,
     "activo" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "coordinadorId" TEXT,
 
     CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
 );
@@ -63,6 +65,7 @@ CREATE TABLE "Mesa" (
     "electores" INTEGER NOT NULL DEFAULT 0,
     "electoresDiscapacidad" INTEGER NOT NULL DEFAULT 0,
     "localVotacionId" TEXT NOT NULL,
+    "personeroId" TEXT,
 
     CONSTRAINT "Mesa_pkey" PRIMARY KEY ("id")
 );
@@ -95,8 +98,9 @@ CREATE TABLE "Acta" (
     "id" TEXT NOT NULL,
     "clienteId" TEXT NOT NULL,
     "mesaId" TEXT NOT NULL,
-    "digitadorId" TEXT NOT NULL,
-    "estado" "EstadoActa" NOT NULL DEFAULT 'DIGITADA',
+    "cargo" "Cargo" NOT NULL,
+    "personeroId" TEXT NOT NULL,
+    "estado" "EstadoActa" NOT NULL DEFAULT 'ENVIADA',
     "observaciones" TEXT,
     "digitadaEn" TIMESTAMP(3) NOT NULL,
     "sincronizadaEn" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -108,7 +112,6 @@ CREATE TABLE "Acta" (
 CREATE TABLE "ActaResultado" (
     "id" TEXT NOT NULL,
     "actaId" TEXT NOT NULL,
-    "cargo" "Cargo" NOT NULL,
     "listaCandidaturaId" TEXT,
     "tipo" "TipoResultado" NOT NULL,
     "votos" INTEGER NOT NULL,
@@ -144,13 +147,13 @@ CREATE UNIQUE INDEX "ListaCandidatura_cargo_provinciaNombre_distritoNombre_organ
 CREATE UNIQUE INDEX "Acta_clienteId_key" ON "Acta"("clienteId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Acta_mesaId_key" ON "Acta"("mesaId");
+CREATE UNIQUE INDEX "Acta_mesaId_cargo_key" ON "Acta"("mesaId", "cargo");
 
 -- CreateIndex
 CREATE INDEX "ActaResultado_actaId_idx" ON "ActaResultado"("actaId");
 
--- CreateIndex
-CREATE INDEX "ActaResultado_cargo_idx" ON "ActaResultado"("cargo");
+-- AddForeignKey
+ALTER TABLE "Usuario" ADD CONSTRAINT "Usuario_coordinadorId_fkey" FOREIGN KEY ("coordinadorId") REFERENCES "Usuario"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Distrito" ADD CONSTRAINT "Distrito_provinciaId_fkey" FOREIGN KEY ("provinciaId") REFERENCES "Provincia"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -162,13 +165,16 @@ ALTER TABLE "LocalVotacion" ADD CONSTRAINT "LocalVotacion_distritoId_fkey" FOREI
 ALTER TABLE "Mesa" ADD CONSTRAINT "Mesa_localVotacionId_fkey" FOREIGN KEY ("localVotacionId") REFERENCES "LocalVotacion"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Mesa" ADD CONSTRAINT "Mesa_personeroId_fkey" FOREIGN KEY ("personeroId") REFERENCES "Usuario"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ListaCandidatura" ADD CONSTRAINT "ListaCandidatura_organizacionId_fkey" FOREIGN KEY ("organizacionId") REFERENCES "OrganizacionPolitica"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Acta" ADD CONSTRAINT "Acta_mesaId_fkey" FOREIGN KEY ("mesaId") REFERENCES "Mesa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Acta" ADD CONSTRAINT "Acta_digitadorId_fkey" FOREIGN KEY ("digitadorId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Acta" ADD CONSTRAINT "Acta_personeroId_fkey" FOREIGN KEY ("personeroId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ActaResultado" ADD CONSTRAINT "ActaResultado_actaId_fkey" FOREIGN KEY ("actaId") REFERENCES "Acta"("id") ON DELETE CASCADE ON UPDATE CASCADE;

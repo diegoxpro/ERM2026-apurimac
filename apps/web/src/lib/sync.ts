@@ -18,6 +18,7 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
           body: JSON.stringify({
             clienteId: acta.clienteId,
             mesaId: acta.mesaId,
+            cargo: acta.cargo,
             resultados: acta.resultados,
             observaciones: acta.observaciones,
             digitadaEn: acta.digitadaEn,

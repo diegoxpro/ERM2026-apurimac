@@ -1,10 +1,11 @@
 import Dexie, { type Table } from 'dexie';
-import type { CatalogoDTO, ResultadoInput } from '@erm2026/shared';
+import type { Cargo, CatalogoDTO, ResultadoInput } from '@erm2026/shared';
 
 export interface ActaLocal {
   clienteId: string;
   mesaId: string;
   mesaCodigo: string;
+  cargo: Cargo;
   resultados: ResultadoInput[];
   observaciones?: string;
   digitadaEn: string;
@@ -27,7 +28,7 @@ class ERM2026DB extends Dexie {
     super('erm2026');
     this.version(1).stores({
       catalogo: 'id',
-      actas: 'clienteId, estado, mesaId, digitadaEn',
+      actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
     });
   }
 }
