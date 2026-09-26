@@ -24,10 +24,18 @@ const ESTADO_LABEL: Record<string, string> = {
   OBSERVADA: 'Observada',
 };
 
+interface GeoProvincia {
+  nombre: string;
+  distritos: { nombre: string; capitalDeProvincia: boolean }[];
+}
+
 export default function LlenarActas() {
   const [catalogo, setCatalogo] = useState<CatalogoDTO | null>(null);
   const [descargando, setDescargando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [geo, setGeo] = useState<GeoProvincia[]>([]);
+  const [provinciaFiltro, setProvinciaFiltro] = useState('');
+  const [distritoFiltro, setDistritoFiltro] = useState('');
   const [mesasOnline, setMesasOnline] = useState<MesaFila[] | null>(null);
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaFila | null>(null);
   const [cedula, setCedula] = useState<CedulaMesaDTO | null>(null);
@@ -41,8 +49,14 @@ export default function LlenarActas() {
       if (cache) setCatalogo(cache);
       if (!cache && navigator.onLine) await descargarCatalogo();
     })();
+    apiFetch<GeoProvincia[]>('/api/locales/geo')
+      .then(setGeo)
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const distritosDisponibles = geo.find((p) => p.nombre === provinciaFiltro)?.distritos ?? [];
+  const hayFiltro = busqueda.trim().length >= 2 || provinciaFiltro !== '' || distritoFiltro !== '';
 
   async function descargarCatalogo() {
     setDescargando(true);
@@ -57,10 +71,10 @@ export default function LlenarActas() {
     }
   }
 
-  // Búsqueda: si hay conexión, se usa el endpoint (trae personero y avance en
-  // vivo); si no, se cae al catálogo cacheado localmente.
+  // Búsqueda/filtros: si hay conexión, se usa el endpoint (trae personero y
+  // avance en vivo); si no, se cae al catálogo cacheado localmente.
   useEffect(() => {
-    if (busqueda.trim().length < 2) {
+    if (!hayFiltro) {
       setMesasOnline(null);
       return;
     }
@@ -71,7 +85,11 @@ export default function LlenarActas() {
     const controlador = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const data = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?search=${encodeURIComponent(busqueda.trim())}&limit=20`);
+        const params = new URLSearchParams({ limit: '100' });
+        if (busqueda.trim().length >= 2) params.set('search', busqueda.trim());
+        if (provinciaFiltro) params.set('provincia', provinciaFiltro);
+        if (distritoFiltro) params.set('distrito', distritoFiltro);
+        const data = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?${params.toString()}`);
         setMesasOnline(data.items);
       } catch {
         setMesasOnline(null);
@@ -81,13 +99,16 @@ export default function LlenarActas() {
       clearTimeout(t);
       controlador.abort();
     };
-  }, [busqueda]);
+  }, [busqueda, provinciaFiltro, distritoFiltro, hayFiltro]);
 
   const mesasOffline: MesaFila[] = useMemo(() => {
-    if (!catalogo || busqueda.trim().length < 2) return [];
+    if (!catalogo || !hayFiltro) return [];
+    const texto = busqueda.trim();
     return catalogo.mesas
-      .filter((m) => m.codigo.includes(busqueda.trim()))
-      .slice(0, 20)
+      .filter((m) => !texto || m.codigo.includes(texto))
+      .filter((m) => !provinciaFiltro || m.provincia === provinciaFiltro)
+      .filter((m) => !distritoFiltro || m.distrito === distritoFiltro)
+      .slice(0, 100)
       .map((m) => ({
         id: m.id,
         codigo: m.codigo,
@@ -99,7 +120,7 @@ export default function LlenarActas() {
         actasRegistradas: 0,
         actasEsperadas: m.capitalDeProvincia ? 3 : 4,
       }));
-  }, [catalogo, busqueda]);
+  }, [catalogo, busqueda, provinciaFiltro, distritoFiltro, hayFiltro]);
 
   const filas = mesasOnline ?? mesasOffline;
 
@@ -185,9 +206,34 @@ export default function LlenarActas() {
               autoFocus
             />
           </div>
+          <select value="APURIMAC" disabled title="Por ahora solo se cubre esta región">
+            <option value="APURIMAC">Región: Apurímac</option>
+          </select>
+          <select
+            value={provinciaFiltro}
+            onChange={(e) => {
+              setProvinciaFiltro(e.target.value);
+              setDistritoFiltro('');
+            }}
+          >
+            <option value="">Todas las provincias</option>
+            {geo.map((p) => (
+              <option key={p.nombre} value={p.nombre}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+          <select value={distritoFiltro} onChange={(e) => setDistritoFiltro(e.target.value)} disabled={!provinciaFiltro}>
+            <option value="">Todos los distritos</option>
+            {distritosDisponibles.map((d) => (
+              <option key={d.nombre} value={d.nombre}>
+                {d.nombre}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {busqueda.trim().length >= 2 && filas.length === 0 && <div className="vacio">Sin resultados para "{busqueda}"</div>}
+        {hayFiltro && filas.length === 0 && <div className="vacio">Sin resultados para los filtros elegidos.</div>}
 
         {filas.length > 0 && (
           <table className="tabla">
@@ -229,8 +275,8 @@ export default function LlenarActas() {
           </table>
         )}
 
-        {busqueda.trim().length < 2 && (
-          <div className="vacio">Escribe al menos 2 caracteres para buscar una mesa.</div>
+        {!hayFiltro && (
+          <div className="vacio">Escribe al menos 2 caracteres, o elige una provincia/distrito, para ver mesas.</div>
         )}
       </div>
 

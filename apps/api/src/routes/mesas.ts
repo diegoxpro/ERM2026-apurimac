@@ -15,8 +15,9 @@ function totalCargosDeMesa(capitalDeProvincia: boolean): number {
 mesasRouter.get('/', async (req, res) => {
   const search = String(req.query.search ?? '').trim();
   const provincia = req.query.provincia ? String(req.query.provincia) : undefined;
+  const distrito = req.query.distrito ? String(req.query.distrito) : undefined;
   const localVotacionId = req.query.localId ? String(req.query.localId) : undefined;
-  const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 200);
+  const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 500);
   const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
 
   const where: any = {};
@@ -27,7 +28,12 @@ mesasRouter.get('/', async (req, res) => {
     ];
   }
   if (localVotacionId) where.localVotacionId = localVotacionId;
-  if (provincia) where.localVotacion = { distrito: { provincia: { nombre: provincia } } };
+  if (provincia || distrito) {
+    const distritoWhere: any = {};
+    if (provincia) distritoWhere.provincia = { nombre: provincia };
+    if (distrito) distritoWhere.nombre = distrito;
+    where.localVotacion = { distrito: distritoWhere };
+  }
 
   const [total, mesas] = await Promise.all([
     prisma.mesa.count({ where }),
