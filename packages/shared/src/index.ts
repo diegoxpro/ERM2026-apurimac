@@ -136,6 +136,11 @@ export interface CrearMesaInput {
   personeroId?: string | null;
 }
 
+export interface DniConsultaDTO {
+  dni: string;
+  nombre: string;
+}
+
 // --- Resultados / dashboard ---
 
 export interface ResultadoOrganizacionDTO {

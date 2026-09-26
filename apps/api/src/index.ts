@@ -11,6 +11,7 @@ import { resultadosRouter } from './routes/resultados';
 import { catalogoRouter } from './routes/catalogo';
 import { usuariosRouter } from './routes/usuarios';
 import { localesRouter } from './routes/locales';
+import { dniRouter } from './routes/dni';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
@@ -32,6 +33,7 @@ app.use('/api/resultados', resultadosRouter);
 app.use('/api/catalogo', catalogoRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/locales', localesRouter);
+app.use('/api/dni', dniRouter);
 
 io.on('connection', (socket) => {
   socket.on('disconnect', () => {});

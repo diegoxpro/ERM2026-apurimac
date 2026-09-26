@@ -27,6 +27,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PORT: 4000
       CORS_ORIGIN: ${CORS_ORIGIN}
+      DNI_API_TOKEN: ${DNI_API_TOKEN:-}
     # Sin puerto publicado: solo "web" (nginx) lo alcanza, por la red interna
     # de Compose. Si necesitas pegarle directo para depurar, usa:
     #   docker compose exec api sh -c 'wget -qO- http://localhost:4000/health'

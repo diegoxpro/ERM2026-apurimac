@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { CrearUsuarioInput, RolUsuario, UsuarioDTO } from '@erm2026/shared';
+import type { CrearUsuarioInput, DniConsultaDTO, RolUsuario, UsuarioDTO } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
@@ -156,6 +156,32 @@ function ModalNuevoUsuario({
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [buscandoDni, setBuscandoDni] = useState(false);
+  const [dniEncontrado, setDniEncontrado] = useState(false);
+
+  useEffect(() => {
+    setDniEncontrado(false);
+    if (!/^\d{8}$/.test(dni)) return;
+    let cancelado = false;
+    const t = setTimeout(async () => {
+      setBuscandoDni(true);
+      try {
+        const data = await apiFetch<DniConsultaDTO>(`/api/dni/${dni}`);
+        if (!cancelado) {
+          setNombre(data.nombre);
+          setDniEncontrado(true);
+        }
+      } catch {
+        // Si no se encuentra o el servicio no está configurado, se completa a mano.
+      } finally {
+        if (!cancelado) setBuscandoDni(false);
+      }
+    }, 400);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+    };
+  }, [dni]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -193,14 +219,18 @@ function ModalNuevoUsuario({
         </div>
         {error && <div className="mensaje error">{error}</div>}
         <form onSubmit={onSubmit}>
-          <div className="form-row">
-            <label>Nombre completo</label>
-            <input value={nombre} onChange={(e) => setNombre(e.target.value)} required autoFocus />
-          </div>
           <div className="form-grid">
             <div className="form-row">
               <label>DNI</label>
-              <input value={dni} onChange={(e) => setDni(e.target.value)} required />
+              <input
+                value={dni}
+                onChange={(e) => setDni(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                inputMode="numeric"
+                required
+                autoFocus
+              />
+              {buscandoDni && <span style={{ fontSize: 11.5, color: '#6b7280' }}>Buscando…</span>}
+              {dniEncontrado && !buscandoDni && <span style={{ fontSize: 11.5, color: 'var(--color-exito)' }}>✓ Encontrado en RENIEC</span>}
             </div>
             <div className="form-row">
               <label>Rol</label>
@@ -210,6 +240,10 @@ function ModalNuevoUsuario({
                 <option value="PERSONERO">Personero</option>
               </select>
             </div>
+          </div>
+          <div className="form-row">
+            <label>Nombre completo</label>
+            <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
           </div>
           {rol === 'PERSONERO' && !soloPersonero && (
             <div className="form-row">
