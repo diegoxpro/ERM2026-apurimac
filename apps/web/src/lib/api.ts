@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+// Vacío = mismo origen (nginx enruta /api y /socket.io hacia el backend).
+// En desarrollo local, apps/web/.env define VITE_API_URL=http://localhost:4000.
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 export class ApiError extends Error {
   status: number;

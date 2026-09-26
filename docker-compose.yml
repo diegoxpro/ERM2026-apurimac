@@ -27,20 +27,21 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PORT: 4000
       CORS_ORIGIN: ${CORS_ORIGIN}
-    ports:
-      - '4000:4000'
+    # Sin puerto publicado: solo "web" (nginx) lo alcanza, por la red interna
+    # de Compose. Si necesitas pegarle directo para depurar, usa:
+    #   docker compose exec api sh -c 'wget -qO- http://localhost:4000/health'
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_URL: ${VITE_API_URL:-}
     restart: unless-stopped
     depends_on:
       - api
     ports:
-      - '80:80'
+      - '${WEB_PORT:-1158}:80'
 
 volumes:
   db_data:

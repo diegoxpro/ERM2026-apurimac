@@ -94,7 +94,7 @@ correr en un ambiente accesible públicamente sin cambiarlas primero.
 ## Despliegue en un VPS con Docker
 
 ```bash
-cp .env.example .env    # completa DATABASE_URL/JWT_SECRET/POSTGRES_*/VITE_API_URL reales
+cp .env.example .env    # completa JWT_SECRET/POSTGRES_*/CORS_ORIGIN/WEB_PORT reales
 docker compose up -d --build
 ```
 
@@ -105,15 +105,16 @@ Para cargar el catálogo la primera vez:
 docker compose exec api npm run seed
 ```
 
-`VITE_API_URL` debe apuntar a la URL pública donde los digitadores accederán a
-la API (por ejemplo `http://<ip-del-vps>:4000`) — se usa como build arg del
-frontend, así que si cambia hay que reconstruir la imagen `web`.
+Solo se publica **un puerto** (`WEB_PORT`, por defecto 1158): nginx sirve el
+frontend y enruta internamente `/api/*` y `/socket.io/*` hacia el contenedor
+`api` por la red de Docker Compose, así que backend y frontend quedan bajo el
+mismo origen (sin CORS) y `VITE_API_URL` puede dejarse vacío.
 
-**Este despliegue expone HTTP simple (puertos 80 y 4000), sin HTTPS.** Para un
-uso real con digitadores en campo (y para no enviar credenciales en claro) se
-necesita un dominio apuntando al VPS y un reverse proxy con certificado
-(Caddy o Nginx + certbot) delante de ambos servicios — no incluido aquí porque
-requiere un dominio real que aún no se ha definido.
+**Este despliegue expone HTTP simple, sin HTTPS.** Para uso real con
+digitadores en campo (y no enviar credenciales en claro) se necesita un
+dominio apuntando al VPS y un reverse proxy con certificado TLS (Nginx Proxy
+Manager, Caddy, o Nginx + certbot) delante del puerto publicado, forzando
+HTTPS y con soporte de WebSockets habilitado (lo usa el dashboard en vivo).
 
 ## Limitaciones conocidas de este piloto
 

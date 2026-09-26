@@ -26,7 +26,8 @@ export default function Supervisor() {
     cargar();
     timerRef.current = setInterval(cargar, 20_000);
 
-    const socket = io(API_URL, { transports: ['websocket'] });
+    // API_URL vacío = mismo origen que la página (nginx enruta /socket.io).
+    const socket = io(API_URL || window.location.origin, { transports: ['websocket'], path: '/socket.io/' });
     socket.on('acta:sincronizada', () => cargar());
 
     return () => {
