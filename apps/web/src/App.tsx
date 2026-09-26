@@ -8,6 +8,7 @@ import LlenarActas from './pages/LlenarActas';
 import Resultados from './pages/Resultados';
 import Usuarios from './pages/Usuarios';
 import LocalesYMesas from './pages/LocalesYMesas';
+import Asignacion from './pages/Asignacion';
 
 function useEnLinea() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -103,6 +104,14 @@ export default function App() {
         element={
           <RutaPrivada>
             <LocalesYMesas />
+          </RutaPrivada>
+        }
+      />
+      <Route
+        path="/asignacion"
+        element={
+          <RutaPrivada>
+            <Asignacion />
           </RutaPrivada>
         }
       />

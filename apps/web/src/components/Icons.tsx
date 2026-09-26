@@ -90,6 +90,14 @@ export const IconTrash = base(
 
 export const IconCheck = base(<polyline points="20 6 9 17 4 12" />);
 
+export const IconUserCheck = base(
+  <>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <polyline points="17 11 19 13 23 9" />
+  </>
+);
+
 export const IconClipboard = base(
   <>
     <rect x="8" y="2" width="8" height="4" rx="1" />

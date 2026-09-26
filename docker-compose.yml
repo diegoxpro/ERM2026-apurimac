@@ -45,7 +45,7 @@ services:
       - '${WEB_PORT:-1158}:80'
 
   # App móvil (PWA) exclusiva para personeros, en su propio dominio
-  # (p.ej. votos.aricast.lat) pero contra la misma API/base de datos.
+  # (personero.aricast.lat) pero contra la misma API/base de datos.
   personero:
     build:
       context: .

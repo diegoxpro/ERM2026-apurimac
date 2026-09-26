@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import type { RolUsuario } from '@erm2026/shared';
-import { IconChart, IconUsers, IconPin, IconEdit, IconClipboard } from './Icons';
+import { IconChart, IconUsers, IconPin, IconEdit, IconClipboard, IconUserCheck } from './Icons';
 
 interface ItemNav {
   to: string;
@@ -13,6 +13,7 @@ const ITEMS: ItemNav[] = [
   { to: '/resultados', label: 'Resultados', icono: IconChart, roles: ['ADMIN', 'COORDINADOR'] },
   { to: '/usuarios', label: 'Usuarios', icono: IconUsers, roles: ['ADMIN', 'COORDINADOR'] },
   { to: '/locales', label: 'Locales y mesas', icono: IconPin, roles: ['ADMIN', 'COORDINADOR'] },
+  { to: '/asignacion', label: 'Asignación de mesas', icono: IconUserCheck, roles: ['ADMIN', 'COORDINADOR'] },
   { to: '/llenar-actas', label: 'Llenar actas', icono: IconEdit, roles: ['ADMIN', 'COORDINADOR', 'PERSONERO'] },
 ];
 
