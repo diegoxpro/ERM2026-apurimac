@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
 import type { ActaResumenDTO, ActaSyncResult, Cargo } from '@erm2026/shared';
 import type { Server as SocketIOServer } from 'socket.io';
+import { vueltaActiva, vueltaDeQuery } from '../lib/vuelta';
 
 const resultadoSchema = z.object({
   listaCandidaturaId: z.string().nullable(),
@@ -15,6 +16,7 @@ const syncSchema = z.object({
   clienteId: z.string().min(1),
   mesaId: z.string().min(1),
   cargo: z.enum(['GOBERNADOR_REGIONAL', 'CONSEJERO_REGIONAL', 'ALCALDE_PROVINCIAL', 'ALCALDE_DISTRITAL']),
+  vuelta: z.enum(['PRIMERA', 'SEGUNDA']).optional(),
   resultados: z.array(resultadoSchema).min(1),
   observaciones: z.string().optional(),
   fotoBase64: z.string().optional(),
@@ -39,11 +41,32 @@ export function buildActasRouter(io: SocketIOServer) {
       return res.json(result);
     }
 
+    // Solo se reciben actas de la vuelta activa: evita que una acta guardada
+    // offline en otra vuelta se mezcle con el conteo en curso.
+    const vuelta = vueltaActiva();
+    if ((input.vuelta ?? vuelta) !== vuelta) {
+      return res.status(422).json({
+        error: `Esta acta es de la ${input.vuelta === 'SEGUNDA' ? 'segunda' : 'primera'} vuelta, pero el sistema está recibiendo actas de la ${vuelta === 'SEGUNDA' ? 'segunda' : 'primera'} vuelta`,
+      });
+    }
+    if (vuelta === 'SEGUNDA' && input.cargo !== 'GOBERNADOR_REGIONAL') {
+      return res.status(422).json({ error: 'En segunda vuelta solo se registra Gobernador y Vicegobernador Regional' });
+    }
+
     const mesa = await prisma.mesa.findUnique({ where: { id: input.mesaId } });
     if (!mesa) return res.status(404).json({ error: 'Mesa no encontrada' });
 
+    // Los votos por lista deben apuntar a listas de este cargo y de esta vuelta.
+    const idsListas = [...new Set(input.resultados.map((r) => r.listaCandidaturaId).filter((id): id is string => !!id))];
+    if (idsListas.length > 0) {
+      const validas = await prisma.listaCandidatura.count({ where: { id: { in: idsListas }, cargo: input.cargo, vuelta } });
+      if (validas !== idsListas.length) {
+        return res.status(422).json({ error: 'El acta incluye organizaciones que no corresponden a este cargo o a esta vuelta' });
+      }
+    }
+
     const yaRegistrada = await prisma.acta.findUnique({
-      where: { mesaId_cargo: { mesaId: input.mesaId, cargo: input.cargo } },
+      where: { mesaId_cargo_vuelta: { mesaId: input.mesaId, cargo: input.cargo, vuelta } },
     });
     if (yaRegistrada) {
       return res
@@ -56,6 +79,7 @@ export function buildActasRouter(io: SocketIOServer) {
         clienteId: input.clienteId,
         mesaId: input.mesaId,
         cargo: input.cargo,
+        vuelta,
         personeroId,
         estado: 'ENVIADA',
         observaciones: input.observaciones,
@@ -88,7 +112,7 @@ export function buildActasRouter(io: SocketIOServer) {
     const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 200);
     const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
 
-    const where: any = {};
+    const where: any = { vuelta: vueltaDeQuery(req.query.vuelta) };
     if (req.usuario!.rol === 'COORDINADOR') where.personero = { coordinadorId: req.usuario!.sub };
     if (cargo) where.cargo = cargo;
     if (estado) where.estado = estado;
@@ -110,6 +134,7 @@ export function buildActasRouter(io: SocketIOServer) {
       mesaId: a.mesaId,
       mesaCodigo: a.mesa.codigo,
       cargo: a.cargo,
+      vuelta: a.vuelta,
       localVotacion: a.mesa.localVotacion.nombre,
       distrito: a.mesa.localVotacion.distrito.nombre,
       provincia: a.mesa.localVotacion.distrito.provincia.nombre,

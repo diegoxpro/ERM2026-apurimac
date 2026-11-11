@@ -22,6 +22,7 @@ export default function ActasRecibidas() {
   const [busqueda, setBusqueda] = useState('');
   const [cargo, setCargo] = useState('');
   const [estado, setEstado] = useState('');
+  const [vuelta, setVuelta] = useState(''); // '' = la vuelta activa del sistema
   const [pagina, setPagina] = useState(0);
   const [actaDetalle, setActaDetalle] = useState<ActaResumenDTO | null>(null);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
@@ -32,6 +33,7 @@ export default function ActasRecibidas() {
     if (busqueda) params.set('search', busqueda);
     if (cargo) params.set('cargo', cargo);
     if (estado) params.set('estado', estado);
+    if (vuelta) params.set('vuelta', vuelta);
     try {
       const data = await apiFetch<{ total: number; items: ActaResumenDTO[] }>(`/api/actas?${params.toString()}`);
       setActas(data.items);
@@ -45,11 +47,11 @@ export default function ActasRecibidas() {
     const t = setTimeout(cargar, 200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busqueda, cargo, estado, pagina]);
+  }, [busqueda, cargo, estado, vuelta, pagina]);
 
   useEffect(() => {
     setPagina(0);
-  }, [busqueda, cargo, estado]);
+  }, [busqueda, cargo, estado, vuelta]);
 
   return (
     <div>
@@ -67,6 +69,11 @@ export default function ActasRecibidas() {
           <div className="buscador">
             <input placeholder="Buscar por número de mesa" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
           </div>
+          <select value={vuelta} onChange={(e) => setVuelta(e.target.value)}>
+            <option value="">Vuelta activa</option>
+            <option value="PRIMERA">Primera vuelta</option>
+            <option value="SEGUNDA">Segunda vuelta</option>
+          </select>
           <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
             <option value="">Todos los cargos</option>
             {(Object.keys(CARGO_LABEL) as Cargo[]).map((c) => (
@@ -184,10 +191,10 @@ function ModalDetalleActa({
   const [validando, setValidando] = useState(false);
 
   useEffect(() => {
-    apiFetch<DetalleActaDTO>(`/api/mesas/${resumen.mesaId}/actas/${resumen.cargo}`)
+    apiFetch<DetalleActaDTO>(`/api/mesas/${resumen.mesaId}/actas/${resumen.cargo}?vuelta=${resumen.vuelta}`)
       .then(setDetalle)
       .catch((e) => setError(e instanceof ApiError ? e.message : 'No se pudo cargar el detalle del acta'));
-  }, [resumen.mesaId, resumen.cargo]);
+  }, [resumen.mesaId, resumen.cargo, resumen.vuelta]);
 
   const votosLista = (detalle?.resultados ?? []).filter((r) => r.tipo === 'VOTO_LISTA');
   const especiales = {

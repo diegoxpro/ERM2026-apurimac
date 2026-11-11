@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
 import type { CatalogoDTO } from '@erm2026/shared';
+import { vueltaActiva } from '../lib/vuelta';
 
 export const catalogoRouter = Router();
 catalogoRouter.use(requiereAuth);
@@ -14,9 +15,11 @@ catalogoRouter.get('/', async (_req, res) => {
     include: { localVotacion: { include: { distrito: { include: { provincia: true } } } } },
   });
 
-  const listas = await prisma.listaCandidatura.findMany({ include: { organizacion: true } });
+  const vuelta = vueltaActiva();
+  const listas = await prisma.listaCandidatura.findMany({ where: { vuelta }, include: { organizacion: true } });
 
   const dto: CatalogoDTO = {
+    vuelta,
     mesas: mesas.map((m) => ({
       id: m.id,
       codigo: m.codigo,
@@ -34,6 +37,7 @@ catalogoRouter.get('/', async (_req, res) => {
       orden: l.orden,
       provinciaNombre: l.provinciaNombre,
       distritoNombre: l.distritoNombre,
+      vuelta: l.vuelta,
     })),
   };
   res.json(dto);

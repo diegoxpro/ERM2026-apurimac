@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CatalogoDTO, CedulaMesaDTO, ColumnaCedulaDTO, ResultadoInput } from '@erm2026/shared';
-import { construirCedulaMesa } from '@erm2026/shared';
+import { actasEsperadasPorMesa, construirCedulaMesa } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
 import { db, getCatalogoCache, setCatalogoCache } from '../lib/db';
 import { sincronizarPendientes } from '../lib/sync';
@@ -47,7 +47,9 @@ export default function LlenarActas() {
     (async () => {
       const cache = await getCatalogoCache();
       if (cache) setCatalogo(cache);
-      if (!cache && navigator.onLine) await descargarCatalogo();
+      // Siempre se refresca con conexión: si cambió la vuelta activa (primera ->
+      // segunda), el catálogo cacheado ya no corresponde a la cédula vigente.
+      if (navigator.onLine) await descargarCatalogo();
     })();
     apiFetch<GeoProvincia[]>('/api/locales/geo')
       .then(setGeo)
@@ -118,7 +120,7 @@ export default function LlenarActas() {
         electores: m.electores,
         personeroNombre: null,
         actasRegistradas: 0,
-        actasEsperadas: m.capitalDeProvincia ? 3 : 4,
+        actasEsperadas: actasEsperadasPorMesa(m.capitalDeProvincia, catalogo.vuelta ?? 'PRIMERA'),
       }));
   }, [catalogo, busqueda, provinciaFiltro, distritoFiltro, hayFiltro]);
 
@@ -135,7 +137,7 @@ export default function LlenarActas() {
         setCedula(await conEstadoLocal(data));
       } else if (catalogo) {
         const mesaCat = catalogo.mesas.find((m) => m.id === mesa.id);
-        if (mesaCat) setCedula(await conEstadoLocal(construirCedulaMesa(mesaCat, catalogo.listas)));
+        if (mesaCat) setCedula(await conEstadoLocal(construirCedulaMesa(mesaCat, catalogo.listas, catalogo.vuelta ?? 'PRIMERA')));
       }
     } catch (e) {
       setMensaje({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudo cargar la cédula de esta mesa' });
@@ -147,7 +149,9 @@ export default function LlenarActas() {
   // Superpone el estado de actas guardadas localmente (aún no sincronizadas)
   // sobre la cédula, para que el personero vea "Enviada" aunque esté offline.
   async function conEstadoLocal(base: CedulaMesaDTO): Promise<CedulaMesaDTO> {
-    const locales = await db.actas.where('mesaId').equals(base.mesaId).toArray();
+    const locales = (await db.actas.where('mesaId').equals(base.mesaId).toArray()).filter(
+      (a) => (a.vuelta ?? 'PRIMERA') === base.vuelta
+    );
     if (locales.length === 0) return base;
     const porCargo = new Map(locales.map((a) => [a.cargo, a]));
     return {
@@ -184,8 +188,12 @@ export default function LlenarActas() {
     <div>
       <div className="page-header">
         <div>
-          <h2>Llenar actas</h2>
-          <p>Registra el conteo final de votos de una mesa.</p>
+          <h2>Llenar actas{catalogo?.vuelta === 'SEGUNDA' ? ' · Segunda vuelta' : ''}</h2>
+          <p>
+            {catalogo?.vuelta === 'SEGUNDA'
+              ? 'Segunda elección regional: registra los votos de Gobernador y Vicegobernador Regional.'
+              : 'Registra el conteo final de votos de una mesa.'}
+          </p>
         </div>
         <div className="filtros">
           <button className="btn secundario" onClick={descargarCatalogo} disabled={descargando}>
@@ -387,6 +395,7 @@ function FormularioCargo({
         mesaId: mesa.id,
         mesaCodigo: mesa.codigo,
         cargo: columna.cargo,
+        vuelta: cedula.vuelta,
         resultados,
         digitadaEn: new Date().toISOString(),
         estado: 'pendiente',

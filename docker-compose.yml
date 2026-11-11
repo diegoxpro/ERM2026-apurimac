@@ -27,6 +27,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PORT: 4000
       CORS_ORIGIN: ${CORS_ORIGIN}
+      VUELTA_ACTIVA: ${VUELTA_ACTIVA:-PRIMERA}
       DNI_API_TOKEN: ${DNI_API_TOKEN:-}
     # Sin puerto publicado: solo "web" (nginx) lo alcanza, por la red interna
     # de Compose. Si necesitas pegarle directo para depurar, usa:

@@ -12,6 +12,7 @@ import { catalogoRouter } from './routes/catalogo';
 import { usuariosRouter } from './routes/usuarios';
 import { localesRouter } from './routes/locales';
 import { dniRouter } from './routes/dni';
+import { vueltaActiva } from './lib/vuelta';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
@@ -24,7 +25,8 @@ app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '1mb' }));
 
-app.get('/health', (_req, res) => res.json({ ok: true }));
+app.get('/health', (_req, res) => res.json({ ok: true, vuelta: vueltaActiva() }));
+app.get('/api/config', (_req, res) => res.json({ vuelta: vueltaActiva() }));
 
 app.use('/api/auth', authRouter);
 app.use('/api/mesas', mesasRouter);
@@ -40,5 +42,5 @@ io.on('connection', (socket) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`API ERM2026 escuchando en puerto ${PORT}`);
+  console.log(`API ERM2026 escuchando en puerto ${PORT} (vuelta activa: ${vueltaActiva()})`);
 });

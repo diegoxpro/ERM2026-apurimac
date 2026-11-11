@@ -2,14 +2,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
+import { actasEsperadasPorMesa } from '@erm2026/shared';
 import type { CedulaMesaDTO, ColumnaCedulaDTO, Cargo, EstadoCargoMesa } from '@erm2026/shared';
+import { vueltaActiva, vueltaDeQuery } from '../lib/vuelta';
 
 export const mesasRouter = Router();
 mesasRouter.use(requiereAuth);
-
-function totalCargosDeMesa(capitalDeProvincia: boolean): number {
-  return capitalDeProvincia ? 3 : 4;
-}
 
 // Listado de mesas con filtros, usado por "Llenar actas" y por "Locales y mesas".
 mesasRouter.get('/', async (req, res) => {
@@ -37,6 +35,7 @@ mesasRouter.get('/', async (req, res) => {
     where.localVotacion = { distrito: distritoWhere };
   }
 
+  const vuelta = vueltaActiva();
   const [total, mesas] = await Promise.all([
     prisma.mesa.count({ where }),
     prisma.mesa.findMany({
@@ -44,7 +43,7 @@ mesasRouter.get('/', async (req, res) => {
       include: {
         localVotacion: { include: { distrito: { include: { provincia: true } } } },
         personero: true,
-        actas: true,
+        actas: { where: { vuelta }, select: { id: true } },
       },
       orderBy: { codigo: 'asc' },
       take: limit,
@@ -55,7 +54,7 @@ mesasRouter.get('/', async (req, res) => {
   res.json({
     total,
     items: mesas.map((m) => {
-      const totalCargos = totalCargosDeMesa(m.localVotacion.distrito.capitalDeProvincia);
+      const totalCargos = actasEsperadasPorMesa(m.localVotacion.distrito.capitalDeProvincia, vuelta);
       return {
         id: m.id,
         codigo: m.codigo,
@@ -144,10 +143,19 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
   const distrito = mesa.localVotacion.distrito;
   const provincia = distrito.provincia;
 
-  const actasExistentes = await prisma.acta.findMany({ where: { mesaId: mesa.id } });
+  const vuelta = vueltaActiva();
+  const actasExistentes = await prisma.acta.findMany({ where: { mesaId: mesa.id, vuelta } });
   const actaPorCargo = new Map(actasExistentes.map((a) => [a.cargo, a]));
 
-  const columnasDef: { cargo: Cargo; titulo: string; where: any }[] = [
+  const columnasDef: { cargo: Cargo; titulo: string; where: any }[] = vuelta === 'SEGUNDA'
+    ? [
+        {
+          cargo: 'GOBERNADOR_REGIONAL',
+          titulo: 'SEGUNDA ELECCIÓN REGIONAL - GOBERNADOR Y VICEGOBERNADOR REGIONAL',
+          where: { cargo: 'GOBERNADOR_REGIONAL', provinciaNombre: '', distritoNombre: '' },
+        },
+      ]
+    : [
     {
       cargo: 'GOBERNADOR_REGIONAL',
       titulo: 'GOBERNADOR Y VICEGOBERNADOR REGIONAL',
@@ -164,7 +172,7 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
       where: { cargo: 'ALCALDE_PROVINCIAL', provinciaNombre: provincia.nombre, distritoNombre: '' },
     },
   ];
-  if (!distrito.capitalDeProvincia) {
+  if (vuelta === 'PRIMERA' && !distrito.capitalDeProvincia) {
     columnasDef.push({
       cargo: 'ALCALDE_DISTRITAL',
       titulo: `DISTRITO DE ${distrito.nombre}`,
@@ -175,7 +183,7 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
   const columnas: ColumnaCedulaDTO[] = [];
   for (const def of columnasDef) {
     const listas = await prisma.listaCandidatura.findMany({
-      where: def.where,
+      where: { ...def.where, vuelta },
       include: { organizacion: true },
       orderBy: { orden: 'asc' },
     });
@@ -203,15 +211,19 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
     distrito: distrito.nombre,
     localVotacion: mesa.localVotacion.nombre,
     electoresHabiles: mesa.electores,
+    vuelta,
     columnas,
   };
   res.json(dto);
 });
 
 // Resultados ya guardados para un cargo de una mesa (para poder editar/ver el detalle).
+// ?vuelta=PRIMERA|SEGUNDA permite consultar la otra vuelta; por defecto, la activa.
 mesasRouter.get('/:mesaId/actas/:cargo', async (req, res) => {
   const acta = await prisma.acta.findUnique({
-    where: { mesaId_cargo: { mesaId: req.params.mesaId, cargo: req.params.cargo as Cargo } },
+    where: {
+      mesaId_cargo_vuelta: { mesaId: req.params.mesaId, cargo: req.params.cargo as Cargo, vuelta: vueltaDeQuery(req.query.vuelta) },
+    },
     include: {
       resultados: { include: { listaCandidatura: { include: { organizacion: true } } } },
       personero: true,

@@ -1,4 +1,4 @@
-import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO } from './index';
+import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, Vuelta } from './index';
 
 export interface MesaCatalogoItem {
   id: string;
@@ -18,9 +18,11 @@ export interface ListaCatalogoItem {
   orden: number;
   provinciaNombre: string; // "" si no aplica (alcance regional)
   distritoNombre: string; // "" si no aplica (alcance regional o provincial)
+  vuelta?: Vuelta; // ausente en catálogos cacheados antes de la segunda vuelta = PRIMERA
 }
 
 export interface CatalogoDTO {
+  vuelta?: Vuelta; // vuelta activa al descargar el catálogo (ausente = PRIMERA)
   mesas: MesaCatalogoItem[];
   listas: ListaCatalogoItem[];
 }
@@ -31,8 +33,31 @@ export interface CatalogoDTO {
  * son capital de provincia no tienen columna de Alcalde Distrital (esa función la
  * cumple el Alcalde Provincial), tal como aparece en la cédula física del JNE.
  */
-export function construirColumnasCedula(mesa: MesaCatalogoItem, listas: ListaCatalogoItem[]): ColumnaCedulaDTO[] {
+export function construirColumnasCedula(
+  mesa: MesaCatalogoItem,
+  listasCatalogo: ListaCatalogoItem[],
+  vuelta: Vuelta = 'PRIMERA'
+): ColumnaCedulaDTO[] {
   const columnas: ColumnaCedulaDTO[] = [];
+  const listas = listasCatalogo.filter((l) => (l.vuelta ?? 'PRIMERA') === vuelta);
+
+  // Segunda vuelta: una sola columna, Gobernador y Vicegobernador Regional,
+  // con las dos fórmulas que pasaron (mismas para todas las mesas de la región).
+  if (vuelta === 'SEGUNDA') {
+    const listasCol = listas
+      .filter((l) => l.cargo === 'GOBERNADOR_REGIONAL')
+      .sort((a, b) => a.orden - b.orden)
+      .map((l) => ({ id: l.id, cargo: l.cargo, organizacion: l.organizacion, simboloUrl: l.simboloUrl, orden: l.orden }));
+    return [
+      {
+        cargo: 'GOBERNADOR_REGIONAL',
+        titulo: 'SEGUNDA ELECCIÓN REGIONAL - GOBERNADOR Y VICEGOBERNADOR REGIONAL',
+        listas: listasCol,
+        estado: 'SIN_REGISTRAR',
+        actaId: null,
+      },
+    ];
+  }
 
   const porCargo: { cargo: Cargo; titulo: string; filtro: (l: ListaCatalogoItem) => boolean }[] = [
     {
@@ -71,7 +96,13 @@ export function construirColumnasCedula(mesa: MesaCatalogoItem, listas: ListaCat
   return columnas;
 }
 
-export function construirCedulaMesa(mesa: MesaCatalogoItem, listas: ListaCatalogoItem[]): CedulaMesaDTO {
+/** Cuántas actas (una por cargo) se esperan de una mesa en la vuelta indicada. */
+export function actasEsperadasPorMesa(capitalDeProvincia: boolean, vuelta: Vuelta = 'PRIMERA'): number {
+  if (vuelta === 'SEGUNDA') return 1;
+  return capitalDeProvincia ? 3 : 4;
+}
+
+export function construirCedulaMesa(mesa: MesaCatalogoItem, listas: ListaCatalogoItem[], vuelta: Vuelta = 'PRIMERA'): CedulaMesaDTO {
   return {
     mesaId: mesa.id,
     mesaCodigo: mesa.codigo,
@@ -79,6 +110,7 @@ export function construirCedulaMesa(mesa: MesaCatalogoItem, listas: ListaCatalog
     distrito: mesa.distrito,
     localVotacion: mesa.localVotacion,
     electoresHabiles: mesa.electores,
-    columnas: construirColumnasCedula(mesa, listas),
+    vuelta,
+    columnas: construirColumnasCedula(mesa, listas, vuelta),
   };
 }
