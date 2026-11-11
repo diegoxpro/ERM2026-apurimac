@@ -116,6 +116,33 @@ dominio apuntando al VPS y un reverse proxy con certificado TLS (Nginx Proxy
 Manager, Caddy, o Nginx + certbot) delante del puerto publicado, forzando
 HTTPS y con soporte de WebSockets habilitado (lo usa el dashboard en vivo).
 
+## Segunda vuelta (Gobernador Regional)
+
+En las ERM solo Gobernador y Vicegobernador Regional puede ir a segunda vuelta,
+entre las dos fórmulas más votadas. El sistema maneja ambas vueltas en la misma
+base: listas y actas tienen un campo `vuelta` (`PRIMERA`/`SEGUNDA`), así que los
+resultados de primera vuelta se conservan y se pueden seguir consultando.
+
+Con la variable `VUELTA_ACTIVA=SEGUNDA`:
+
+- La cédula de cada mesa tiene un solo cuerpo (Gobernador y Vicegobernador
+  Regional) con las 2 fórmulas, más blancos, nulos e impugnados.
+- Se espera 1 acta por mesa; la API rechaza actas de otros cargos, de primera
+  vuelta o con organizaciones que no estén en la segunda vuelta.
+- Resultados muestra el % sobre votos válidos y la diferencia entre ambas.
+- Resultados y Actas recibidas tienen un selector para ver la primera vuelta.
+
+Pasos para activarla en el VPS:
+
+1. Completa `data/seed/segunda-vuelta.json` con las 2 organizaciones (nombre
+   exacto de `organizaciones.json`) y su orden en la cédula:
+   `{ "organizaciones": [ { "organizacion": "...", "orden": 1 }, { "organizacion": "...", "orden": 2 } ] }`
+2. `docker compose up -d --build` (aplica la migración que agrega `vuelta`).
+3. `docker compose exec api npm run seed:segunda-vuelta`
+4. Pon `VUELTA_ACTIVA=SEGUNDA` en `.env` y `docker compose up -d api`.
+5. Pide a digitadores y personeros que abran la app con conexión una vez, para
+   que descarguen la cédula nueva antes de trabajar sin señal.
+
 ## Limitaciones conocidas de este piloto
 
 - Digitación simple, sin doble digitación ni validaciones automáticas de

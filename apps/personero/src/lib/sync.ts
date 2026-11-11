@@ -30,6 +30,7 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
             clienteId: acta.clienteId,
             mesaId: acta.mesaId,
             cargo: acta.cargo,
+            vuelta: acta.vuelta ?? 'PRIMERA',
             resultados: acta.resultados,
             observaciones: acta.observaciones,
             fotoBase64: acta.fotoDataUrl,

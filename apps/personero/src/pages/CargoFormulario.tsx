@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, DetalleActaDTO, ResultadoInput } from '@erm2026/shared';
+import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, DetalleActaDTO, ResultadoInput, Vuelta } from '@erm2026/shared';
 import { db } from '../lib/db';
 import { apiFetch } from '../lib/api';
 import { sincronizarPendientes } from '../lib/sync';
@@ -85,22 +85,40 @@ export default function CargoFormulario() {
   // Una vez que el acta ya fue enviada (o validada/observada), no se vuelve a
   // mostrar un formulario en blanco: se muestra lo que realmente se registró.
   if (columna.estado !== 'SIN_REGISTRAR') {
-    return <DetalleActa mesaId={mesaId!} mesaCodigo={cedula.mesaCodigo} columna={columna} />;
+    return <DetalleActa mesaId={mesaId!} mesaCodigo={cedula.mesaCodigo} vuelta={cedula.vuelta} columna={columna} />;
   }
 
-  return <Formulario mesaId={mesaId!} mesaCodigo={cedula.mesaCodigo} electoresHabiles={cedula.electoresHabiles} columna={columna} />;
+  return (
+    <Formulario
+      mesaId={mesaId!}
+      mesaCodigo={cedula.mesaCodigo}
+      vuelta={cedula.vuelta}
+      electoresHabiles={cedula.electoresHabiles}
+      columna={columna}
+    />
+  );
 }
 
-function DetalleActa({ mesaId, mesaCodigo, columna }: { mesaId: string; mesaCodigo: string; columna: ColumnaCedulaDTO }) {
+function DetalleActa({
+  mesaId,
+  mesaCodigo,
+  vuelta,
+  columna,
+}: {
+  mesaId: string;
+  mesaCodigo: string;
+  vuelta: Vuelta;
+  columna: ColumnaCedulaDTO;
+}) {
   const navigate = useNavigate();
   const [detalle, setDetalle] = useState<DetalleActaDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch<DetalleActaDTO>(`/api/mesas/${mesaId}/actas/${columna.cargo}`)
+    apiFetch<DetalleActaDTO>(`/api/mesas/${mesaId}/actas/${columna.cargo}?vuelta=${vuelta}`)
       .then(setDetalle)
       .catch(() => setError('No se pudo cargar el detalle de esta acta (sin conexión).'));
-  }, [mesaId, columna.cargo]);
+  }, [mesaId, columna.cargo, vuelta]);
 
   const porLista = new Map((detalle?.resultados ?? []).filter((r) => r.tipo === 'VOTO_LISTA').map((r) => [r.listaCandidaturaId, r.votos]));
   const especiales = {
@@ -190,11 +208,13 @@ function DetalleActa({ mesaId, mesaCodigo, columna }: { mesaId: string; mesaCodi
 function Formulario({
   mesaId,
   mesaCodigo,
+  vuelta,
   electoresHabiles,
   columna,
 }: {
   mesaId: string;
   mesaCodigo: string;
+  vuelta: Vuelta;
   electoresHabiles: number;
   columna: ColumnaCedulaDTO;
 }) {
@@ -243,6 +263,7 @@ function Formulario({
         mesaId,
         mesaCodigo,
         cargo: columna.cargo,
+        vuelta,
         resultados,
         observaciones: observaciones || undefined,
         fotoDataUrl: foto ?? undefined,

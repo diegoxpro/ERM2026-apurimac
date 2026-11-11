@@ -1,6 +1,7 @@
 export {
   construirColumnasCedula,
   construirCedulaMesa,
+  actasEsperadasPorMesa,
   type MesaCatalogoItem,
   type ListaCatalogoItem,
   type CatalogoDTO,
@@ -11,6 +12,9 @@ export type Cargo =
   | 'CONSEJERO_REGIONAL'
   | 'ALCALDE_PROVINCIAL'
   | 'ALCALDE_DISTRITAL';
+
+// En las ERM solo Gobernador y Vicegobernador Regional puede ir a segunda vuelta.
+export type Vuelta = 'PRIMERA' | 'SEGUNDA';
 
 export type RolUsuario = 'ADMIN' | 'COORDINADOR' | 'PERSONERO';
 
@@ -42,6 +46,7 @@ export interface CedulaMesaDTO {
   distrito: string;
   localVotacion: string;
   electoresHabiles: number;
+  vuelta: Vuelta;
   columnas: ColumnaCedulaDTO[];
 }
 
@@ -55,6 +60,7 @@ export interface ActaSyncInput {
   clienteId: string; // id generado en el dispositivo (uuid) para idempotencia
   mesaId: string;
   cargo: Cargo;
+  vuelta?: Vuelta; // si falta, el servidor asume la vuelta activa
   resultados: ResultadoInput[];
   observaciones?: string;
   fotoBase64?: string; // foto del acta física, comprimida en el dispositivo antes de enviarse
@@ -89,6 +95,7 @@ export interface ActaResumenDTO {
   mesaId: string;
   mesaCodigo: string;
   cargo: Cargo;
+  vuelta: Vuelta;
   localVotacion: string;
   distrito: string;
   provincia: string;
@@ -180,7 +187,8 @@ export interface ResultadoOrganizacionDTO {
   organizacion: string;
   simboloUrl: string | null;
   votos: number;
-  porcentaje: number;
+  porcentaje: number; // sobre votos emitidos
+  porcentajeValidos: number; // sobre votos válidos (el que define la segunda vuelta)
 }
 
 export interface ResultadosPorCargoDTO {
@@ -200,6 +208,7 @@ export interface AvanceProvinciaDTO {
 }
 
 export interface ResultadosResumenDTO {
+  vuelta: Vuelta;
   actasRecibidas: number;
   actasEsperadas: number;
   validadas: number;

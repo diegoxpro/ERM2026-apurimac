@@ -135,11 +135,12 @@ async function main() {
     if (!organizacionId) throw new Error(`Organización no encontrada: ${l.organizacion}`);
     await prisma.listaCandidatura.upsert({
       where: {
-        cargo_provinciaNombre_distritoNombre_organizacionId: {
+        cargo_provinciaNombre_distritoNombre_organizacionId_vuelta: {
           cargo: l.cargo,
           provinciaNombre: l.provincia ?? '',
           distritoNombre: l.distrito ?? '',
           organizacionId,
+          vuelta: 'PRIMERA',
         },
       },
       update: { orden: l.orden, expediente: l.expediente, jee: l.jee },

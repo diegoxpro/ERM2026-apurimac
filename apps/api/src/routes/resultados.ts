@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { requiereAuth, requiereRol } from '../lib/auth';
+import { actasEsperadasPorMesa } from '@erm2026/shared';
 import type { ResultadosResumenDTO, ResultadosPorCargoDTO, Cargo } from '@erm2026/shared';
+import { vueltaDeQuery } from '../lib/vuelta';
 
 export const resultadosRouter = Router();
 resultadosRouter.use(requiereAuth, requiereRol('ADMIN', 'COORDINADOR'));
@@ -13,13 +15,21 @@ const CARGOS: { cargo: Cargo; titulo: string }[] = [
   { cargo: 'ALCALDE_DISTRITAL', titulo: 'Alcalde Distrital' },
 ];
 
+const CARGOS_SEGUNDA_VUELTA: { cargo: Cargo; titulo: string }[] = [
+  { cargo: 'GOBERNADOR_REGIONAL', titulo: 'Gobernador y Vicegobernador Regional (segunda vuelta)' },
+];
+
+const redondear1 = (n: number) => Math.round(n * 1000) / 10;
+
+// ?vuelta=PRIMERA|SEGUNDA permite ver la otra vuelta; por defecto, la activa.
 resultadosRouter.get('/', async (req, res) => {
   const provincia = req.query.provincia ? String(req.query.provincia) : undefined;
+  const vuelta = vueltaDeQuery(req.query.vuelta);
 
   const mesaWhere: any = {};
   if (provincia) mesaWhere.localVotacion = { distrito: { provincia: { nombre: provincia } } };
 
-  const actaWhere: any = { mesa: mesaWhere };
+  const actaWhere: any = { mesa: mesaWhere, vuelta };
 
   const [mesasConProvincia, actasRecibidas, validadas, personerosActivos] = await Promise.all([
     prisma.mesa.findMany({
@@ -32,14 +42,14 @@ resultadosRouter.get('/', async (req, res) => {
   ]);
 
   const actasEsperadas = mesasConProvincia.reduce(
-    (acc, m) => acc + (m.localVotacion.distrito.capitalDeProvincia ? 3 : 4),
+    (acc, m) => acc + actasEsperadasPorMesa(m.localVotacion.distrito.capitalDeProvincia, vuelta),
     0
   );
 
   const mesasCubiertasRows = await prisma.acta.findMany({ where: actaWhere, select: { mesaId: true }, distinct: ['mesaId'] });
 
   const provincias = await prisma.provincia.findMany({
-    include: { distritos: { include: { localesVotacion: { include: { mesas: { include: { actas: true } } } } } } },
+    include: { distritos: { include: { localesVotacion: { include: { mesas: { include: { actas: { where: { vuelta }, select: { id: true } } } } } } } } },
   });
   const avancePorProvincia = provincias.map((p) => {
     const mesas = p.distritos.flatMap((d) => d.localesVotacion.flatMap((lv) => lv.mesas));
@@ -51,7 +61,7 @@ resultadosRouter.get('/', async (req, res) => {
   });
 
   const porCargo: ResultadosPorCargoDTO[] = [];
-  for (const { cargo, titulo } of CARGOS) {
+  for (const { cargo, titulo } of vuelta === 'SEGUNDA' ? CARGOS_SEGUNDA_VUELTA : CARGOS) {
     const resultados = await prisma.actaResultado.findMany({
       where: { acta: { cargo, ...actaWhere } },
       include: { listaCandidatura: { include: { organizacion: true } } },
@@ -81,7 +91,8 @@ resultadosRouter.get('/', async (req, res) => {
         organizacion,
         simboloUrl: v.simboloUrl,
         votos: v.votos,
-        porcentaje: totalEmitidos > 0 ? Math.round((v.votos / totalEmitidos) * 1000) / 10 : 0,
+        porcentaje: totalEmitidos > 0 ? redondear1(v.votos / totalEmitidos) : 0,
+        porcentajeValidos: validos > 0 ? redondear1(v.votos / validos) : 0,
       }))
       .sort((a, b) => b.votos - a.votos);
 
@@ -89,6 +100,7 @@ resultadosRouter.get('/', async (req, res) => {
   }
 
   const dto: ResultadosResumenDTO = {
+    vuelta,
     actasRecibidas,
     actasEsperadas,
     validadas,

@@ -28,6 +28,13 @@ enum EstadoActa {
   OBSERVADA
 }
 
+// Vuelta electoral. En las ERM la segunda vuelta solo existe para Gobernador y
+// Vicegobernador Regional, entre las dos fórmulas más votadas.
+enum Vuelta {
+  PRIMERA
+  SEGUNDA
+}
+
 enum TipoResultado {
   VOTO_LISTA
   BLANCO
@@ -122,9 +129,10 @@ model ListaCandidatura {
   orden           Int
   expediente      String?
   jee             String?
+  vuelta          Vuelta     @default(PRIMERA)
   resultados      ActaResultado[]
 
-  @@unique([cargo, provinciaNombre, distritoNombre, organizacionId])
+  @@unique([cargo, provinciaNombre, distritoNombre, organizacionId, vuelta])
 }
 
 // Una Acta cubre UN cargo de UNA mesa (así se cuenta y se revisa en la
@@ -136,6 +144,7 @@ model Acta {
   mesaId         String
   mesa           Mesa       @relation(fields: [mesaId], references: [id])
   cargo          Cargo
+  vuelta         Vuelta     @default(PRIMERA)
   personeroId    String
   personero      Usuario    @relation(fields: [personeroId], references: [id])
   estado         EstadoActa @default(ENVIADA)
@@ -145,7 +154,7 @@ model Acta {
   sincronizadaEn DateTime   @default(now())
   resultados     ActaResultado[]
 
-  @@unique([mesaId, cargo])
+  @@unique([mesaId, cargo, vuelta])
 }
 
 model ActaResultado {

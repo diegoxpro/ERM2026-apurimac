@@ -123,7 +123,11 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
       </div>
 
       <div className="tarjeta-eleccion">
-        <strong>Elecciones Regionales y Municipales 2026 — APURÍMAC</strong>
+        <strong>
+          {cedula.vuelta === 'SEGUNDA'
+            ? 'Segunda Elección Regional 2026 — APURÍMAC'
+            : 'Elecciones Regionales y Municipales 2026 — APURÍMAC'}
+        </strong>
         <div className="tarjeta-eleccion-fila">
           <IconPin />
           <span>

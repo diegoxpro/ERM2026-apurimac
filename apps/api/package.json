@@ -8,7 +8,8 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "seed:segunda-vuelta": "tsx prisma/seed-segunda-vuelta.ts"
   },
   "dependencies": {
     "@erm2026/shared": "*",

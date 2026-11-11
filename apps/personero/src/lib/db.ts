@@ -1,11 +1,12 @@
 import Dexie, { type Table } from 'dexie';
-import type { Cargo, CedulaMesaDTO, ResultadoInput } from '@erm2026/shared';
+import type { Cargo, CedulaMesaDTO, ResultadoInput, Vuelta } from '@erm2026/shared';
 
 export interface ActaLocal {
   clienteId: string;
   mesaId: string;
   mesaCodigo: string;
   cargo: Cargo;
+  vuelta?: Vuelta; // ausente en actas guardadas antes de la segunda vuelta = PRIMERA
   resultados: ResultadoInput[];
   observaciones?: string;
   fotoDataUrl?: string; // solo local: la foto del acta física no se sincroniza con el servidor.
