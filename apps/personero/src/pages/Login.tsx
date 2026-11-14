@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import { ApiError } from '../lib/api';
 import { IconShieldCheck } from '../components/Icons';
 import InstallGuide from './InstallGuide';
+import { ELECCION } from '@erm2026/shared';
 
 export default function Login() {
   const { login } = useAuth();
@@ -72,7 +73,9 @@ export default function Login() {
         </button>
       </div>
 
-      <p className="login-pie">Conteo rápido no oficial — Apurímac 2026</p>
+      <p className="login-pie">
+        {ELECCION.nombre} — {ELECCION.region}
+      </p>
 
       {mostrarGuia && <InstallGuide onCerrar={() => setMostrarGuia(false)} />}
     </div>

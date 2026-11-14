@@ -1,9 +1,9 @@
 :root {
-  --color-primario: #28B227;
-  --color-primario-oscuro: #1f8a1f;
-  --color-acento: #F6EA00;
-  --color-fondo: #f4f6f5;
-  --color-borde: #e2e5e4;
+  --color-primario: #1D428A;
+  --color-primario-oscuro: #142F63;
+  --color-acento: #ED1C24;
+  --color-fondo: #f4f6fa;
+  --color-borde: #e2e6ee;
   --color-exito: #1f8a1f;
   --color-error: #b91c1c;
   --color-advertencia: #92660a;
@@ -97,10 +97,11 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
   max-width: 380px;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  border-top: 5px solid var(--color-acento);
 }
 
 .login-icono {
-  width: 60px; height: 60px; border-radius: 999px; background: #e5f5e5; color: var(--color-primario-oscuro);
+  width: 60px; height: 60px; border-radius: 999px; background: #fde8e9; color: var(--color-acento);
   display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
 }
 .login-icono svg { width: 30px; height: 30px; }
@@ -123,6 +124,7 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .app-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: white; border-bottom: 1px solid var(--color-borde);
+  box-shadow: inset 0 3px 0 var(--color-acento);
   padding: 14px 16px; padding-top: calc(14px + var(--safe-top));
   position: sticky; top: 0; z-index: 10;
 }
@@ -184,7 +186,7 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
   border: 1px solid var(--color-borde); border-left: 5px solid var(--color-acento);
 }
 .tarjeta-cargo svg { width: 20px; height: 20px; color: #9ca3af; flex-shrink: 0; }
-.tarjeta-cargo.estado-SIN_REGISTRAR { border-left-color: #cbd1cd; }
+.tarjeta-cargo.estado-SIN_REGISTRAR { border-left-color: #cbd2de; }
 .tarjeta-cargo.estado-ENVIADA { border-left-color: var(--color-info); }
 .tarjeta-cargo.estado-VALIDADA { border-left-color: var(--color-exito); }
 .tarjeta-cargo.estado-OBSERVADA { border-left-color: var(--color-advertencia); }
@@ -192,9 +194,9 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .tarjeta-cargo-info strong { font-size: 14.5px; }
 
 .estado-linea { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-top: 2px; }
-.estado-punto { width: 8px; height: 8px; border-radius: 999px; background: #cbd1cd; display: inline-block; }
+.estado-punto { width: 8px; height: 8px; border-radius: 999px; background: #cbd2de; display: inline-block; }
 .estado-linea.estado-SIN_REGISTRAR { color: #9ca3af; }
-.estado-linea.estado-SIN_REGISTRAR .estado-punto { background: #cbd1cd; }
+.estado-linea.estado-SIN_REGISTRAR .estado-punto { background: #cbd2de; }
 .estado-linea.estado-ENVIADA { color: var(--color-info); }
 .estado-linea.estado-ENVIADA .estado-punto { background: var(--color-info); }
 .estado-linea.estado-VALIDADA { color: var(--color-exito); }
@@ -207,14 +209,14 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .pantalla-formulario { min-height: 100vh; padding-bottom: 140px; }
 
 .banner-cargo {
-  background: var(--color-acento); color: #4b4200; font-weight: 700; font-size: 13px;
+  background: var(--color-acento); color: #fff; font-weight: 700; font-size: 13px;
   text-align: center; padding: 12px 16px; letter-spacing: 0.01em;
 }
 
 .contenido-formulario { padding: 16px; }
 
-.fila-organizacion { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f1f0; }
-.fila-organizacion img, .fila-organizacion .simbolo-vacio { width: 34px; height: 34px; border-radius: 7px; object-fit: contain; background: #f4f6f5; flex-shrink: 0; }
+.fila-organizacion { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f2f6; }
+.fila-organizacion img, .fila-organizacion .simbolo-vacio { width: 34px; height: 34px; border-radius: 7px; object-fit: contain; background: #f4f6fa; flex-shrink: 0; }
 .nombre-organizacion { flex: 1; font-size: 13.5px; font-weight: 600; }
 
 .caja-votos {
@@ -222,7 +224,7 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
   border: 1.5px solid var(--color-borde); border-radius: 8px; flex-shrink: 0;
 }
 .caja-votos:focus { border-color: var(--color-primario); }
-.caja-votos::placeholder { color: #c3c8c5; font-weight: 400; }
+.caja-votos::placeholder { color: #c3c9d6; font-weight: 400; }
 
 .valor-lectura { font-size: 16px; font-weight: 700; flex-shrink: 0; }
 
@@ -257,7 +259,7 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
   position: fixed; left: 0; right: 0; bottom: 0; background: white; border-top: 1px solid var(--color-borde);
   padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom));
 }
-.pie-resumen { display: flex; justify-content: space-between; background: #f4f6f5; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 12.5px; }
+.pie-resumen { display: flex; justify-content: space-between; background: #f4f6fa; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 12.5px; }
 .pie-resumen .valor { font-size: 19px; font-weight: 700; display: block; }
 .pie-resumen .etiqueta { color: #6b7280; }
 .aviso-validada { text-align: center; font-size: 12.5px; color: var(--color-exito); font-weight: 600; padding: 8px 0; }
@@ -285,7 +287,7 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 
 .tabs-instalar { display: flex; gap: 8px; margin-bottom: 16px; }
 .tabs-instalar button {
-  flex: 1; width: auto; background: #eef1ef; color: #4b5563; border: none; border-radius: 999px;
+  flex: 1; width: auto; background: #eef1f6; color: #4b5563; border: none; border-radius: 999px;
   padding: 9px 14px; font-size: 13.5px; font-weight: 700; cursor: pointer;
 }
 .tabs-instalar button.activo { background: var(--color-primario); color: white; }
@@ -295,4 +297,4 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .icono-paso { display: inline-flex; vertical-align: middle; margin-left: 6px; color: var(--color-primario-oscuro); }
 .icono-paso svg { width: 16px; height: 16px; }
 
-.nota-instalar { font-size: 12.5px; color: #6b7280; background: #f4f6f5; border-radius: 8px; padding: 10px 12px; }
+.nota-instalar { font-size: 12.5px; color: #6b7280; background: #f4f6fa; border-radius: 8px; padding: 10px 12px; }

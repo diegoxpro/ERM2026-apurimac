@@ -65,6 +65,8 @@ export function construirColumnasCedula(mesa: MesaCatalogoItem, listas: ListaCat
       .filter(def.filtro)
       .sort((a, b) => a.orden - b.orden)
       .map((l) => ({ id: l.id, cargo: def.cargo, organizacion: l.organizacion, simboloUrl: l.simboloUrl, orden: l.orden }));
+    // Un cargo sin listas no se elige en esta mesa (p.ej. segunda vuelta: solo Gobernador).
+    if (listasCol.length === 0) continue;
     columnas.push({ cargo: def.cargo, titulo: def.titulo, listas: listasCol, estado: 'SIN_REGISTRAR', actaId: null });
   }
 

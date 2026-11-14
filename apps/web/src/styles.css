@@ -1,11 +1,11 @@
 :root {
-  --color-primario: #28B227;
-  --color-primario-oscuro: #1f8a1f;
-  --color-acento: #F6EA00;
-  --color-fondo: #f4f6f5;
-  --color-borde: #e2e5e4;
-  --color-sidebar: #10241a;
-  --color-sidebar-hover: #16351f;
+  --color-primario: #1D428A;
+  --color-primario-oscuro: #142F63;
+  --color-acento: #ED1C24;
+  --color-fondo: #f4f6fa;
+  --color-borde: #e2e6ee;
+  --color-sidebar: #0F2350;
+  --color-sidebar-hover: #1A3570;
   --color-exito: #1f8a1f;
   --color-error: #b91c1c;
   --color-advertencia: #92660a;
@@ -34,7 +34,7 @@ button, input, select { font-family: inherit; }
   width: 240px;
   flex-shrink: 0;
   background: var(--color-sidebar);
-  color: #d7e8dc;
+  color: #d6deef;
   display: flex;
   flex-direction: column;
   padding: 16px 12px;
@@ -54,7 +54,7 @@ button, input, select { font-family: inherit; }
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--color-primario);
+  background: var(--color-acento);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,19 +69,20 @@ button, input, select { font-family: inherit; }
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: #b9ccbe;
+  color: #b4c1dc;
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 500;
 }
 .sidebar nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
 .sidebar nav a:hover { background: var(--color-sidebar-hover); color: white; }
-.sidebar nav a.activo { background: var(--color-primario); color: white; }
+.sidebar nav a.activo { background: var(--color-acento); color: white; }
 
 .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .topbar {
   background: white;
+  border-top: 3px solid var(--color-acento);
   border-bottom: 1px solid var(--color-borde);
   padding: 14px 24px;
   display: flex;
@@ -98,7 +99,7 @@ button, input, select { font-family: inherit; }
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: #e5efe6;
+  background: #e3e9f5;
   color: var(--color-primario-oscuro);
   display: flex;
   align-items: center;
@@ -186,7 +187,7 @@ button.btn.pequeno { padding: 6px 12px; font-size: 12.5px; }
 .stat-card { background: white; border: 1px solid var(--color-borde); border-radius: 10px; padding: 16px; }
 .stat-card .stat-cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .stat-card .stat-titulo { font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; color: #6b7280; text-transform: uppercase; }
-.stat-card .stat-icono { width: 30px; height: 30px; border-radius: 8px; background: #eef6ee; color: var(--color-primario-oscuro); display: flex; align-items: center; justify-content: center; }
+.stat-card .stat-icono { width: 30px; height: 30px; border-radius: 8px; background: #eaf0fa; color: var(--color-primario-oscuro); display: flex; align-items: center; justify-content: center; }
 .stat-card .stat-icono svg { width: 16px; height: 16px; }
 .stat-card .stat-valor { font-size: 26px; font-weight: 700; }
 .stat-card .stat-detalle { font-size: 12px; color: #6b7280; margin-top: 2px; }
@@ -195,16 +196,20 @@ button.btn.pequeno { padding: 6px 12px; font-size: 12.5px; }
 
 .tabs-cargo { display: flex; gap: 6px; flex-wrap: wrap; }
 .tabs-cargo button {
-  width: auto; background: #eef1ef; color: #4b5563; border: none; border-radius: 999px;
+  width: auto; background: #eef1f6; color: #4b5563; border: none; border-radius: 999px;
   padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
 }
 .tabs-cargo button.activo { background: var(--color-primario); color: white; }
+.badge-cargo-unico {
+  background: var(--color-primario); color: white; border-radius: 999px;
+  padding: 7px 14px; font-size: 12.5px; font-weight: 600;
+}
 
 .resultado-org { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
-.resultado-org img { width: 30px; height: 30px; border-radius: 6px; object-fit: contain; background: #f4f6f5; flex-shrink: 0; }
+.resultado-org img { width: 30px; height: 30px; border-radius: 6px; object-fit: contain; background: #f4f6fa; flex-shrink: 0; }
 .resultado-org .nombre-barra { flex: 1; min-width: 0; }
 .resultado-org .nombre-barra .nombre { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
-.barra-avance { background: #eceeed; border-radius: 999px; overflow: hidden; height: 8px; }
+.barra-avance { background: #eceff4; border-radius: 999px; overflow: hidden; height: 8px; }
 .barra-avance > div { background: var(--color-primario); height: 100%; }
 .resultado-org .cifras { text-align: right; flex-shrink: 0; width: 70px; font-size: 13px; font-weight: 700; }
 .resultado-org .cifras span.votos { display: block; font-size: 11px; font-weight: 500; color: #6b7280; }
@@ -221,17 +226,17 @@ table.tabla th {
   text-align: left; padding: 10px 12px; color: #6b7280; font-size: 11.5px;
   text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--color-borde);
 }
-table.tabla td { padding: 12px; border-bottom: 1px solid #f0f1f0; vertical-align: middle; }
+table.tabla td { padding: 12px; border-bottom: 1px solid #f0f2f6; vertical-align: middle; }
 table.tabla tr:last-child td { border-bottom: none; }
 table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 
 .badge-rol { font-size: 11.5px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
 .badge-rol.ADMIN { background: #fee2e2; color: #b91c1c; }
 .badge-rol.COORDINADOR { background: #dbeafe; color: #1d4ed8; }
-.badge-rol.PERSONERO { background: #eef1ef; color: #374151; }
+.badge-rol.PERSONERO { background: #eef1f6; color: #374151; }
 
 .badge-estado { font-size: 11.5px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
-.badge-estado.SIN_REGISTRAR { background: #f1f2f1; color: #6b7280; }
+.badge-estado.SIN_REGISTRAR { background: #f1f3f7; color: #6b7280; }
 .badge-estado.ENVIADA { background: #dbeafe; color: #1d4ed8; }
 .badge-estado.VALIDADA { background: #e7f7e7; color: var(--color-exito); }
 .badge-estado.OBSERVADA { background: #fef3c7; color: var(--color-advertencia); }
@@ -261,7 +266,7 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
   border-left: 4px solid var(--color-primario);
 }
-.cargo-card.estado-SIN_REGISTRAR { border-left-color: #cbd1cd; }
+.cargo-card.estado-SIN_REGISTRAR { border-left-color: #cbd2de; }
 .cargo-card.estado-ENVIADA { border-left-color: #1d4ed8; }
 .cargo-card.estado-VALIDADA { border-left-color: var(--color-exito); }
 .cargo-card.estado-OBSERVADA { border-left-color: var(--color-advertencia); }
@@ -270,12 +275,12 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 .cargo-card .accion { font-size: 13px; font-weight: 600; color: var(--color-primario-oscuro); cursor: pointer; background: none; border: none; width: auto; }
 
 .stepper-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
-.stepper-row img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: #f4f6f5; flex-shrink: 0; }
+.stepper-row img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: #f4f6fa; flex-shrink: 0; }
 .stepper-row .nombre { flex: 1; font-size: 13.5px; font-weight: 500; }
 .stepper { display: flex; align-items: center; gap: 6px; }
 .stepper button {
   width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--color-borde);
-  background: #f4f6f5; font-weight: 700; cursor: pointer; padding: 0; font-size: 15px; color: var(--color-texto);
+  background: #f4f6fa; font-weight: 700; cursor: pointer; padding: 0; font-size: 15px; color: var(--color-texto);
 }
 .stepper input { width: 56px; text-align: center; padding: 6px 4px; }
 
@@ -283,7 +288,7 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 .especiales-grid label { font-size: 12px; }
 
 .resumen-modal {
-  display: flex; justify-content: space-between; background: #f4f6f5; border-radius: 8px;
+  display: flex; justify-content: space-between; background: #f4f6fa; border-radius: 8px;
   padding: 12px 14px; margin-bottom: 16px; font-size: 13px;
 }
 .resumen-modal .valor { font-size: 20px; font-weight: 700; display: block; }
@@ -291,6 +296,24 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 
 .vacio { text-align: center; padding: 30px; color: #9ca3af; font-size: 13.5px; }
+
+/* --- Llenar actas (panel) --- */
+
+button.btn svg { width: 16px; height: 16px; }
+.banner-cargo-admin {
+  background: var(--color-acento); color: #fff; font-weight: 700; font-size: 12.5px; text-align: center;
+  padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; letter-spacing: 0.02em;
+}
+.caja-votos-admin {
+  width: 96px; text-align: center; font-size: 15px; font-weight: 700; padding: 7px 8px;
+}
+.caja-votos-admin::placeholder { color: #c3c9d6; font-weight: 400; }
+.simbolo-fila { width: 26px; height: 26px; border-radius: 5px; object-fit: contain; background: #f4f6fa; }
+.previa-foto-admin { display: block; margin-top: 8px; max-width: 100%; max-height: 160px; border-radius: 8px; border: 1px solid var(--color-borde); }
+.textarea-admin {
+  width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px; border-radius: 8px;
+  border: 1px solid var(--color-borde); resize: vertical;
+}
 
 /* --- Actas recibidas --- */
 
@@ -301,7 +324,7 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 
 .grid-detalle-acta {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-  background: #f4f6f5; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;
+  background: #f4f6fa; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;
 }
 .grid-detalle-acta > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .grid-detalle-acta .etiqueta { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #6b7280; }
@@ -326,7 +349,7 @@ table.tabla .subtexto { font-size: 12px; color: #6b7280; }
 }
 .item-local strong { font-size: 13.5px; }
 .item-local .subtexto { font-size: 11.5px; }
-.item-local.activo { border-color: var(--color-primario); background: #f2f9f2; }
+.item-local.activo { border-color: var(--color-primario); background: #eef3fb; }
 .item-local:hover { border-color: var(--color-primario); }
 
 @media (max-width: 860px) {

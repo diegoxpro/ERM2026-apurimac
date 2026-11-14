@@ -3,13 +3,10 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
 import type { CedulaMesaDTO, ColumnaCedulaDTO, Cargo, EstadoCargoMesa } from '@erm2026/shared';
+import { contadorActasEsperadas } from '../lib/cargos';
 
 export const mesasRouter = Router();
 mesasRouter.use(requiereAuth);
-
-function totalCargosDeMesa(capitalDeProvincia: boolean): number {
-  return capitalDeProvincia ? 3 : 4;
-}
 
 // Listado de mesas con filtros, usado por "Llenar actas" y por "Locales y mesas".
 mesasRouter.get('/', async (req, res) => {
@@ -37,7 +34,7 @@ mesasRouter.get('/', async (req, res) => {
     where.localVotacion = { distrito: distritoWhere };
   }
 
-  const [total, mesas] = await Promise.all([
+  const [total, mesas, actasEsperadasDe] = await Promise.all([
     prisma.mesa.count({ where }),
     prisma.mesa.findMany({
       where,
@@ -50,12 +47,14 @@ mesasRouter.get('/', async (req, res) => {
       take: limit,
       skip: offset,
     }),
+    contadorActasEsperadas(),
   ]);
 
   res.json({
     total,
     items: mesas.map((m) => {
-      const totalCargos = totalCargosDeMesa(m.localVotacion.distrito.capitalDeProvincia);
+      const d = m.localVotacion.distrito;
+      const totalCargos = actasEsperadasDe(d.provincia.nombre, d.nombre, d.capitalDeProvincia);
       return {
         id: m.id,
         codigo: m.codigo,
@@ -179,6 +178,7 @@ mesasRouter.get('/:mesaId/cedula', async (req, res) => {
       include: { organizacion: true },
       orderBy: { orden: 'asc' },
     });
+    if (listas.length === 0) continue;
     const acta = actaPorCargo.get(def.cargo);
     const estado: EstadoCargoMesa = acta ? acta.estado : 'SIN_REGISTRAR';
     columnas.push({

@@ -19,6 +19,8 @@ const syncSchema = z.object({
   observaciones: z.string().optional(),
   fotoBase64: z.string().optional(),
   digitadaEn: z.string(),
+  // Solo ADMIN/COORDINADOR: registrar el acta a nombre de un personero (p.ej. la dictó por teléfono).
+  personeroId: z.string().optional(),
 });
 
 export function buildActasRouter(io: SocketIOServer) {
@@ -31,7 +33,19 @@ export function buildActasRouter(io: SocketIOServer) {
       return res.status(400).json({ error: 'Datos de acta inválidos', detalle: parsed.error.flatten() });
     }
     const input = parsed.data;
-    const personeroId = req.usuario!.sub;
+    let personeroId = req.usuario!.sub;
+    if (input.personeroId && input.personeroId !== personeroId) {
+      const rol = req.usuario!.rol;
+      if (rol !== 'ADMIN' && rol !== 'COORDINADOR') {
+        return res.status(403).json({ error: 'Solo un administrador o coordinador puede registrar actas a nombre de otro' });
+      }
+      const titular = await prisma.usuario.findUnique({ where: { id: input.personeroId } });
+      if (!titular || titular.rol !== 'PERSONERO') return res.status(400).json({ error: 'El personero indicado no existe' });
+      if (rol === 'COORDINADOR' && titular.coordinadorId !== req.usuario!.sub) {
+        return res.status(403).json({ error: 'Ese personero no pertenece a tu equipo' });
+      }
+      personeroId = titular.id;
+    }
 
     const existente = await prisma.acta.findUnique({ where: { clienteId: input.clienteId } });
     if (existente) {

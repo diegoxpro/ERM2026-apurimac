@@ -6,6 +6,13 @@ export {
   type CatalogoDTO,
 } from './cedula';
 
+// Elección que cubre este despliegue. Se muestra en ambas apps (panel y PWA).
+export const ELECCION = {
+  region: 'Lambayeque',
+  regionMayus: 'LAMBAYEQUE',
+  nombre: 'Elecciones Regionales 2026 — Segunda Vuelta',
+} as const;
+
 export type Cargo =
   | 'GOBERNADOR_REGIONAL'
   | 'CONSEJERO_REGIONAL'
@@ -59,6 +66,7 @@ export interface ActaSyncInput {
   observaciones?: string;
   fotoBase64?: string; // foto del acta física, comprimida en el dispositivo antes de enviarse
   digitadaEn: string; // ISO date, hora local del dispositivo al momento de guardar
+  personeroId?: string; // solo panel admin: registrar a nombre de un personero
 }
 
 export interface ActaSyncResult {

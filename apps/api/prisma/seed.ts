@@ -5,7 +5,8 @@ import fs from 'fs';
 import path from 'path';
 
 const prisma = new PrismaClient();
-const SEED_DIR = path.join(__dirname, '..', '..', '..', 'data', 'seed');
+// SEED_DATASET elige la subcarpeta de data/seed a cargar (lambayeque | apurimac).
+const SEED_DIR = path.join(__dirname, '..', '..', '..', 'data', 'seed', process.env.SEED_DATASET || 'lambayeque');
 
 function readJson<T>(file: string): T {
   return JSON.parse(fs.readFileSync(path.join(SEED_DIR, file), 'utf8'));
@@ -175,7 +176,7 @@ async function main() {
     update: {},
     create: {
       dni: '00000002',
-      nombre: 'Coordinador Apurímac',
+      nombre: 'Coordinador Regional',
       email: 'coordinador@erm2026.local',
       passwordHash,
       rol: 'COORDINADOR',

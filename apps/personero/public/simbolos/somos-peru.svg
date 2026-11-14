@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 634">
+  <path d="M375 600 C 250 500, 50 390, 50 215 C 50 110, 130 40, 225 40 C 295 40, 345 80, 375 130 C 405 80, 455 40, 525 40 C 620 40, 700 110, 700 215 C 700 390, 500 500, 375 600 Z"
+        fill="none" stroke="#ED1C24" stroke-width="56" stroke-linejoin="round"/>
+  <g font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" fill="#1D428A"
+     stroke="#fff" stroke-width="22" paint-order="stroke" stroke-linejoin="round">
+    <text x="18" y="262" font-size="118" textLength="420" lengthAdjust="spacingAndGlyphs">SOMOS</text>
+    <text x="205" y="425" font-size="190" textLength="520" lengthAdjust="spacingAndGlyphs">PERU</text>
+  </g>
+</svg>

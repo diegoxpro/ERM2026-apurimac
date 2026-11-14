@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { requiereAuth, requiereRol } from '../lib/auth';
 import type { ResultadosResumenDTO, ResultadosPorCargoDTO, Cargo } from '@erm2026/shared';
+import { cargosConListas, contadorActasEsperadas } from '../lib/cargos';
 
 export const resultadosRouter = Router();
 resultadosRouter.use(requiereAuth, requiereRol('ADMIN', 'COORDINADOR'));
@@ -21,20 +22,27 @@ resultadosRouter.get('/', async (req, res) => {
 
   const actaWhere: any = { mesa: mesaWhere };
 
-  const [mesasConProvincia, actasRecibidas, validadas, personerosActivos] = await Promise.all([
+  const [mesasConProvincia, actasRecibidas, validadas, personerosActivos, actasEsperadasDe, cargosActivos] = await Promise.all([
     prisma.mesa.findMany({
       where: mesaWhere,
-      select: { id: true, localVotacion: { select: { distrito: { select: { capitalDeProvincia: true } } } } },
+      select: {
+        id: true,
+        localVotacion: {
+          select: { distrito: { select: { nombre: true, capitalDeProvincia: true, provincia: { select: { nombre: true } } } } },
+        },
+      },
     }),
     prisma.acta.count({ where: actaWhere }),
     prisma.acta.count({ where: { ...actaWhere, estado: 'VALIDADA' } }),
     prisma.usuario.count({ where: { rol: 'PERSONERO', activo: true } }),
+    contadorActasEsperadas(),
+    cargosConListas(),
   ]);
 
-  const actasEsperadas = mesasConProvincia.reduce(
-    (acc, m) => acc + (m.localVotacion.distrito.capitalDeProvincia ? 3 : 4),
-    0
-  );
+  const actasEsperadas = mesasConProvincia.reduce((acc, m) => {
+    const d = m.localVotacion.distrito;
+    return acc + actasEsperadasDe(d.provincia.nombre, d.nombre, d.capitalDeProvincia);
+  }, 0);
 
   const mesasCubiertasRows = await prisma.acta.findMany({ where: actaWhere, select: { mesaId: true }, distinct: ['mesaId'] });
 
@@ -52,12 +60,26 @@ resultadosRouter.get('/', async (req, res) => {
 
   const porCargo: ResultadosPorCargoDTO[] = [];
   for (const { cargo, titulo } of CARGOS) {
-    const resultados = await prisma.actaResultado.findMany({
-      where: { acta: { cargo, ...actaWhere } },
-      include: { listaCandidatura: { include: { organizacion: true } } },
-    });
+    if (!cargosActivos.has(cargo)) continue;
+    const [resultados, listas] = await Promise.all([
+      prisma.actaResultado.findMany({
+        where: { acta: { cargo, ...actaWhere } },
+        include: { listaCandidatura: { include: { organizacion: true } } },
+      }),
+      prisma.listaCandidatura.findMany({
+        where: { cargo, ...(provincia && cargo !== 'GOBERNADOR_REGIONAL' ? { provinciaNombre: provincia } : {}) },
+        include: { organizacion: true },
+        orderBy: { orden: 'asc' },
+      }),
+    ]);
 
+    // Cada organización en contienda aparece aunque aún no tenga votos.
     const votosPorOrg = new Map<string, { simboloUrl: string | null; votos: number }>();
+    for (const l of listas) {
+      if (!votosPorOrg.has(l.organizacion.nombre)) {
+        votosPorOrg.set(l.organizacion.nombre, { simboloUrl: l.organizacion.simboloUrl, votos: 0 });
+      }
+    }
     let blancos = 0;
     let nulos = 0;
     let impugnados = 0;

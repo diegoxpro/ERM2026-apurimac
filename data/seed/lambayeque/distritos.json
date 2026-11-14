@@ -1,0 +1,192 @@
+[
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "CHICLAYO",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "ETEN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "ETEN PUERTO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "MONSEFU",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "PIMENTEL",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "REQUE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "SANTA ROSA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "LA VICTORIA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "CHONGOYAPE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "LAGUNAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "NUEVA ARICA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "OYOTUN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "PICSI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "JOSE LEONARDO ORTIZ",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "SAÑA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "CAYALTI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "PATAPO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "POMALCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "PUCALA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHICLAYO",
+    "distrito": "TUMAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "FERREÑAFE",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "INCAHUASI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "CAÑARIS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "PITIPO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "PUEBLO NUEVO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "FERREÑAFE",
+    "distrito": "MANUEL ANTONIO MESONES MURO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "LAMBAYEQUE",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "CHOCHOPE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "ILLIMO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "JAYANCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "MOCHUMI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "MORROPE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "MOTUPE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "OLMOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "PACORA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "SALAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "SAN JOSE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "LAMBAYEQUE",
+    "distrito": "TUCUME",
+    "capitalDeProvincia": false
+  }
+]

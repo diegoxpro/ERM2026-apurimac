@@ -1,11 +1,11 @@
 // Lee los dos Excel fuente (padrón de mesas y cédulas de sufragio de Apurímac 2026)
-// y genera JSON normalizado en data/seed/ para alimentar el seed de la base de datos.
+// y genera JSON normalizado en data/seed/apurimac/ para alimentar el seed de la base de datos.
 const path = require('path');
 const fs = require('fs');
 const ExcelJS = require('exceljs');
 
 const RAW_DIR = path.join(__dirname, '..', 'raw');
-const SEED_DIR = path.join(__dirname, '..', 'seed');
+const SEED_DIR = path.join(__dirname, '..', 'seed', 'apurimac');
 
 const CARGO_MAP = {
   'GOBERNADOR Y VICEGOBERNADOR REGIONAL': 'GOBERNADOR_REGIONAL',

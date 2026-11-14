@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { ApiError } from '../lib/api';
 import { IconClipboard } from '../components/Icons';
+import { ELECCION } from '@erm2026/shared';
 
 export default function Login() {
   const { login } = useAuth();
@@ -28,14 +29,14 @@ export default function Login() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-fondo)' }}>
-      <div className="card" style={{ maxWidth: 360, width: '100%' }}>
+      <div className="card" style={{ maxWidth: 360, width: '100%', borderTop: '4px solid var(--color-acento)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
           <span
             style={{
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: 'var(--color-primario)',
+              background: 'var(--color-acento)',
               color: 'white',
               display: 'flex',
               alignItems: 'center',
@@ -46,7 +47,9 @@ export default function Login() {
           </span>
           <h2 style={{ margin: 0 }}>Panel de Administrativos</h2>
         </div>
-        <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Conteo rápido no oficial — Apurímac 2026</p>
+        <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
+          {ELECCION.nombre} — {ELECCION.region}
+        </p>
         {error && <div className="mensaje error">{error}</div>}
         <form onSubmit={onSubmit}>
           <div className="form-row">

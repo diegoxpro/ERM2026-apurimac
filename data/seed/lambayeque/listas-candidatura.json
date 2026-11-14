@@ -1,0 +1,20 @@
+[
+  {
+    "cargo": "GOBERNADOR_REGIONAL",
+    "nivel": "REGION",
+    "organizacion": "FUERZA POPULAR",
+    "orden": 1,
+    "simboloUrl": "/simbolos/fuerza-popular.svg",
+    "expediente": "",
+    "jee": "CHICLAYO"
+  },
+  {
+    "cargo": "GOBERNADOR_REGIONAL",
+    "nivel": "REGION",
+    "organizacion": "PARTIDO DEMOCRATICO SOMOS PERU",
+    "orden": 2,
+    "simboloUrl": "/simbolos/somos-peru.svg",
+    "expediente": "",
+    "jee": "CHICLAYO"
+  }
+]

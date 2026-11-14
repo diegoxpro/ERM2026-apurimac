@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Cargo, CedulaMesaDTO, ResultadoInput } from '@erm2026/shared';
+import { ELECCION, type Cargo, type CedulaMesaDTO, type ResultadoInput } from '@erm2026/shared';
 
 export interface ActaLocal {
   clienteId: string;
@@ -26,7 +26,7 @@ class PersoneroDB extends Dexie {
   mesas!: Table<MesaCache, string>;
 
   constructor() {
-    super('erm2026_personero');
+    super(`erm2026_personero_${ELECCION.regionMayus}`);
     this.version(1).stores({
       actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
       mesas: 'mesaId',

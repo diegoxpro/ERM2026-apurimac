@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { CedulaMesaDTO } from '@erm2026/shared';
+import { ELECCION, type CedulaMesaDTO } from '@erm2026/shared';
 import { obtenerCedula, getMesasAsignadasCount, tituloCorto, ESTADO_LABEL } from '../lib/mesas';
 import { hayPendientes, sincronizarPendientes, getUltimaSync } from '../lib/sync';
 import { useAuth } from '../lib/auth';
@@ -123,11 +123,13 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
       </div>
 
       <div className="tarjeta-eleccion">
-        <strong>Elecciones Regionales y Municipales 2026 — APURÍMAC</strong>
+        <strong>
+          {ELECCION.nombre} — {ELECCION.regionMayus}
+        </strong>
         <div className="tarjeta-eleccion-fila">
           <IconPin />
           <span>
-            {cedula.distrito}, {cedula.provincia}, APURÍMAC
+            {cedula.distrito}, {cedula.provincia}, {ELECCION.regionMayus}
           </span>
         </div>
         <div className="tarjeta-eleccion-fila">

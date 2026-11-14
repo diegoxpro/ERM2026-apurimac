@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { CatalogoDTO, CedulaMesaDTO, ColumnaCedulaDTO, ResultadoInput } from '@erm2026/shared';
-import { construirCedulaMesa } from '@erm2026/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ActaSyncInput, ActaSyncResult, CedulaMesaDTO, ColumnaCedulaDTO, ResultadoInput, UsuarioDTO } from '@erm2026/shared';
+import { ELECCION } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
-import { db, getCatalogoCache, setCatalogoCache } from '../lib/db';
-import { sincronizarPendientes } from '../lib/sync';
+import { useAuth } from '../lib/auth';
+import { comprimirImagen } from '../lib/imagen';
+import { IconCamera, IconClose } from '../components/Icons';
+import { ModalDetalleActa } from './ActasRecibidas';
 
 interface MesaFila {
   id: string;
@@ -12,9 +14,15 @@ interface MesaFila {
   distrito: string;
   provincia: string;
   electores: number;
+  personeroId: string | null;
   personeroNombre: string | null;
   actasRegistradas: number;
   actasEsperadas: number;
+}
+
+interface GeoProvincia {
+  nombre: string;
+  distritos: { nombre: string; capitalDeProvincia: boolean }[];
 }
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -24,140 +32,73 @@ const ESTADO_LABEL: Record<string, string> = {
   OBSERVADA: 'Observada',
 };
 
-interface GeoProvincia {
-  nombre: string;
-  distritos: { nombre: string; capitalDeProvincia: boolean }[];
+function tituloCorto(cargo: string): string {
+  switch (cargo) {
+    case 'GOBERNADOR_REGIONAL':
+      return 'Gobernador regional';
+    case 'CONSEJERO_REGIONAL':
+      return 'Consejero regional';
+    case 'ALCALDE_PROVINCIAL':
+      return 'Alcalde provincial';
+    case 'ALCALDE_DISTRITAL':
+      return 'Alcalde distrital';
+    default:
+      return cargo;
+  }
 }
 
 export default function LlenarActas() {
-  const [catalogo, setCatalogo] = useState<CatalogoDTO | null>(null);
-  const [descargando, setDescargando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [geo, setGeo] = useState<GeoProvincia[]>([]);
   const [provinciaFiltro, setProvinciaFiltro] = useState('');
   const [distritoFiltro, setDistritoFiltro] = useState('');
-  const [mesasOnline, setMesasOnline] = useState<MesaFila[] | null>(null);
+  const [mesas, setMesas] = useState<MesaFila[] | null>(null);
+  const [personeros, setPersoneros] = useState<UsuarioDTO[]>([]);
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaFila | null>(null);
   const [cedula, setCedula] = useState<CedulaMesaDTO | null>(null);
-  const [cargandoCedula, setCargandoCedula] = useState(false);
   const [columnaActiva, setColumnaActiva] = useState<ColumnaCedulaDTO | null>(null);
-  const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error' | 'info'; texto: string } | null>(null);
+  const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const cache = await getCatalogoCache();
-      if (cache) setCatalogo(cache);
-      if (!cache && navigator.onLine) await descargarCatalogo();
-    })();
-    apiFetch<GeoProvincia[]>('/api/locales/geo')
-      .then(setGeo)
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    apiFetch<GeoProvincia[]>('/api/locales/geo').then(setGeo).catch(() => {});
+    apiFetch<UsuarioDTO[]>('/api/usuarios?rol=PERSONERO&estado=activo').then(setPersoneros).catch(() => {});
   }, []);
 
   const distritosDisponibles = geo.find((p) => p.nombre === provinciaFiltro)?.distritos ?? [];
   const hayFiltro = busqueda.trim().length >= 2 || provinciaFiltro !== '' || distritoFiltro !== '';
 
-  async function descargarCatalogo() {
-    setDescargando(true);
+  async function buscarMesas() {
+    if (!hayFiltro) {
+      setMesas(null);
+      return;
+    }
+    const params = new URLSearchParams({ limit: '100' });
+    if (busqueda.trim().length >= 2) params.set('search', busqueda.trim());
+    if (provinciaFiltro) params.set('provincia', provinciaFiltro);
+    if (distritoFiltro) params.set('distrito', distritoFiltro);
     try {
-      const data = await apiFetch<CatalogoDTO>('/api/catalogo');
-      await setCatalogoCache(data);
-      setCatalogo(data);
-    } catch {
-      // Silencioso: si falla, seguimos con lo que haya en caché (u offline).
-    } finally {
-      setDescargando(false);
+      const data = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?${params.toString()}`);
+      setMesas(data.items);
+    } catch (e) {
+      setMensaje({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudo buscar mesas' });
     }
   }
 
-  // Búsqueda/filtros: si hay conexión, se usa el endpoint (trae personero y
-  // avance en vivo); si no, se cae al catálogo cacheado localmente.
   useEffect(() => {
-    if (!hayFiltro) {
-      setMesasOnline(null);
-      return;
-    }
-    if (!navigator.onLine) {
-      setMesasOnline(null);
-      return;
-    }
-    const controlador = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const params = new URLSearchParams({ limit: '100' });
-        if (busqueda.trim().length >= 2) params.set('search', busqueda.trim());
-        if (provinciaFiltro) params.set('provincia', provinciaFiltro);
-        if (distritoFiltro) params.set('distrito', distritoFiltro);
-        const data = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?${params.toString()}`);
-        setMesasOnline(data.items);
-      } catch {
-        setMesasOnline(null);
-      }
-    }, 250);
-    return () => {
-      clearTimeout(t);
-      controlador.abort();
-    };
-  }, [busqueda, provinciaFiltro, distritoFiltro, hayFiltro]);
-
-  const mesasOffline: MesaFila[] = useMemo(() => {
-    if (!catalogo || !hayFiltro) return [];
-    const texto = busqueda.trim();
-    return catalogo.mesas
-      .filter((m) => !texto || m.codigo.includes(texto))
-      .filter((m) => !provinciaFiltro || m.provincia === provinciaFiltro)
-      .filter((m) => !distritoFiltro || m.distrito === distritoFiltro)
-      .slice(0, 100)
-      .map((m) => ({
-        id: m.id,
-        codigo: m.codigo,
-        localVotacion: m.localVotacion,
-        distrito: m.distrito,
-        provincia: m.provincia,
-        electores: m.electores,
-        personeroNombre: null,
-        actasRegistradas: 0,
-        actasEsperadas: m.capitalDeProvincia ? 3 : 4,
-      }));
-  }, [catalogo, busqueda, provinciaFiltro, distritoFiltro, hayFiltro]);
-
-  const filas = mesasOnline ?? mesasOffline;
+    const t = setTimeout(buscarMesas, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda, provinciaFiltro, distritoFiltro]);
 
   async function abrirMesa(mesa: MesaFila) {
     setMesaSeleccionada(mesa);
-    setBusqueda('');
-    setMensaje(null);
-    setCargandoCedula(true);
+    setCedula(null);
     try {
-      if (navigator.onLine) {
-        const data = await apiFetch<CedulaMesaDTO>(`/api/mesas/${mesa.id}/cedula`);
-        setCedula(await conEstadoLocal(data));
-      } else if (catalogo) {
-        const mesaCat = catalogo.mesas.find((m) => m.id === mesa.id);
-        if (mesaCat) setCedula(await conEstadoLocal(construirCedulaMesa(mesaCat, catalogo.listas)));
-      }
+      setCedula(await apiFetch<CedulaMesaDTO>(`/api/mesas/${mesa.id}/cedula`));
     } catch (e) {
       setMensaje({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudo cargar la cédula de esta mesa' });
-    } finally {
-      setCargandoCedula(false);
+      setMesaSeleccionada(null);
     }
-  }
-
-  // Superpone el estado de actas guardadas localmente (aún no sincronizadas)
-  // sobre la cédula, para que el personero vea "Enviada" aunque esté offline.
-  async function conEstadoLocal(base: CedulaMesaDTO): Promise<CedulaMesaDTO> {
-    const locales = await db.actas.where('mesaId').equals(base.mesaId).toArray();
-    if (locales.length === 0) return base;
-    const porCargo = new Map(locales.map((a) => [a.cargo, a]));
-    return {
-      ...base,
-      columnas: base.columnas.map((col) => {
-        const local = porCargo.get(col.cargo);
-        if (!local || col.estado !== 'SIN_REGISTRAR') return col;
-        return { ...col, estado: local.estado === 'error' ? 'SIN_REGISTRAR' : 'ENVIADA' };
-      }),
-    };
   }
 
   function cerrarMesa() {
@@ -166,31 +107,21 @@ export default function LlenarActas() {
     setColumnaActiva(null);
   }
 
-  async function alGuardar() {
-    if (!mesaSeleccionada) return;
-    setMensaje({ tipo: 'info', texto: 'Acta guardada. Sincronizando...' });
+  async function alGuardar(texto: string) {
     setColumnaActiva(null);
-    // Recargar el estado del modal de cargos para reflejar el guardado.
-    await abrirMesa(mesaSeleccionada);
-    if (navigator.onLine) {
-      const r = await sincronizarPendientes();
-      setMensaje({ tipo: 'exito', texto: `Acta guardada y sincronizada (${r.enviadas}).` });
-    } else {
-      setMensaje({ tipo: 'info', texto: 'Acta guardada en el dispositivo. Se sincronizará al recuperar conexión.' });
-    }
+    setMensaje({ tipo: 'exito', texto });
+    if (mesaSeleccionada) await abrirMesa(mesaSeleccionada);
+    buscarMesas();
   }
+
+  const columnaYaEnviada = columnaActiva && columnaActiva.estado !== 'SIN_REGISTRAR';
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h2>Llenar actas</h2>
-          <p>Registra el conteo final de votos de una mesa.</p>
-        </div>
-        <div className="filtros">
-          <button className="btn secundario" onClick={descargarCatalogo} disabled={descargando}>
-            {descargando ? 'Actualizando…' : 'Actualizar catálogo offline'}
-          </button>
+          <p>Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).</p>
         </div>
       </div>
 
@@ -199,15 +130,10 @@ export default function LlenarActas() {
       <div className="card">
         <div className="toolbar">
           <div className="buscador">
-            <input
-              placeholder="Buscar por número de mesa o local"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              autoFocus
-            />
+            <input placeholder="Buscar por número de mesa o local" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} autoFocus />
           </div>
-          <select value="APURIMAC" disabled title="Por ahora solo se cubre esta región">
-            <option value="APURIMAC">Región: Apurímac</option>
+          <select value={ELECCION.regionMayus} disabled title="Por ahora solo se cubre esta región">
+            <option value={ELECCION.regionMayus}>Región: {ELECCION.region}</option>
           </select>
           <select
             value={provinciaFiltro}
@@ -233,9 +159,10 @@ export default function LlenarActas() {
           </select>
         </div>
 
-        {hayFiltro && filas.length === 0 && <div className="vacio">Sin resultados para los filtros elegidos.</div>}
+        {!hayFiltro && <div className="vacio">Escribe al menos 2 caracteres, o elige una provincia/distrito, para ver mesas.</div>}
+        {hayFiltro && mesas && mesas.length === 0 && <div className="vacio">Sin resultados para los filtros elegidos.</div>}
 
-        {filas.length > 0 && (
+        {hayFiltro && mesas && mesas.length > 0 && (
           <table className="tabla">
             <thead>
               <tr>
@@ -248,7 +175,7 @@ export default function LlenarActas() {
               </tr>
             </thead>
             <tbody>
-              {filas.map((m) => (
+              {mesas.map((m) => (
                 <tr key={m.id}>
                   <td>
                     <strong>{m.codigo}</strong>
@@ -266,7 +193,7 @@ export default function LlenarActas() {
                   </td>
                   <td>
                     <button className="btn pequeno" onClick={() => abrirMesa(m)}>
-                      Llenar
+                      {m.actasRegistradas >= m.actasEsperadas ? 'Ver' : 'Llenar'}
                     </button>
                   </td>
                 </tr>
@@ -274,131 +201,155 @@ export default function LlenarActas() {
             </tbody>
           </table>
         )}
-
-        {!hayFiltro && (
-          <div className="vacio">Escribe al menos 2 caracteres, o elige una provincia/distrito, para ver mesas.</div>
-        )}
       </div>
 
-      {mesaSeleccionada && cedula && !columnaActiva && (
+      {mesaSeleccionada && !columnaActiva && (
         <div className="modal-fondo" onClick={cerrarMesa}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
-                <h3>Mesa {cedula.mesaCodigo}</h3>
+                <h3>Mesa {mesaSeleccionada.codigo}</h3>
                 <p>
-                  {cedula.localVotacion} · {cedula.distrito}
+                  {mesaSeleccionada.localVotacion} · {mesaSeleccionada.distrito}
                 </p>
               </div>
-              <button onClick={cerrarMesa}>×</button>
+              <button onClick={cerrarMesa}>
+                <IconClose />
+              </button>
             </div>
-            <p style={{ fontSize: 13, color: '#6b7280', marginTop: -8, marginBottom: 14 }}>
-              {cedula.electoresHabiles} electores hábiles. Elige el cargo para registrar sus votos.
-            </p>
-            {cargandoCedula && <p>Cargando…</p>}
-            {cedula.columnas.map((col) => (
-              <div key={col.cargo} className={`cargo-card estado-${col.estado}`}>
-                <div>
-                  <div className="titulo">{tituloCorto(col.cargo)}</div>
-                  <div className="subtitulo">{col.titulo}</div>
-                  <div className="subtitulo">{ESTADO_LABEL[col.estado]}</div>
+            {!cedula && <p className="subtexto">Cargando…</p>}
+            {cedula &&
+              cedula.columnas.map((col) => (
+                <div key={col.cargo} className={`cargo-card estado-${col.estado}`}>
+                  <div>
+                    <div className="titulo">{tituloCorto(col.cargo)}</div>
+                    <div className="subtitulo">{col.titulo}</div>
+                    <span className={`badge-estado ${col.estado}`} style={{ display: 'inline-block', marginTop: 6 }}>
+                      {ESTADO_LABEL[col.estado]}
+                    </span>
+                  </div>
+                  <button className="btn pequeno" onClick={() => setColumnaActiva(col)}>
+                    {col.estado === 'SIN_REGISTRAR' ? 'Llenar acta' : 'Ver acta'}
+                  </button>
                 </div>
-                <button className="accion" onClick={() => setColumnaActiva(col)}>
-                  {col.estado === 'SIN_REGISTRAR' ? 'Llenar' : 'Ver / editar'}
-                </button>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
 
-      {mesaSeleccionada && cedula && columnaActiva && (
-        <FormularioCargo
+      {mesaSeleccionada && cedula && columnaActiva && columnaYaEnviada && (
+        <ModalDetalleActa
+          resumen={{
+            mesaId: cedula.mesaId,
+            mesaCodigo: cedula.mesaCodigo,
+            cargo: columnaActiva.cargo,
+            localVotacion: cedula.localVotacion,
+            distrito: cedula.distrito,
+            personeroNombre: mesaSeleccionada.personeroNombre ?? '—',
+            estado: columnaActiva.estado as 'ENVIADA',
+            electoresHabiles: cedula.electoresHabiles,
+          }}
+          onCerrar={() => setColumnaActiva(null)}
+          onValidada={() => alGuardar('Acta marcada como validada.')}
+        />
+      )}
+
+      {mesaSeleccionada && cedula && columnaActiva && !columnaYaEnviada && (
+        <FormularioActa
           mesa={mesaSeleccionada}
           cedula={cedula}
           columna={columnaActiva}
+          personeros={personeros}
           onCancelar={() => setColumnaActiva(null)}
-          onGuardado={alGuardar}
+          onGuardado={() => alGuardar(`Acta de ${tituloCorto(columnaActiva.cargo)} de la mesa ${cedula.mesaCodigo} registrada.`)}
         />
       )}
     </div>
   );
 }
 
-function tituloCorto(cargo: string): string {
-  switch (cargo) {
-    case 'GOBERNADOR_REGIONAL':
-      return 'Gobernador regional';
-    case 'CONSEJERO_REGIONAL':
-      return 'Consejero regional';
-    case 'ALCALDE_PROVINCIAL':
-      return 'Alcalde provincial';
-    case 'ALCALDE_DISTRITAL':
-      return 'Alcalde distrital';
-    default:
-      return cargo;
-  }
-}
-
-function FormularioCargo({
+function FormularioActa({
   mesa,
   cedula,
   columna,
+  personeros,
   onCancelar,
   onGuardado,
 }: {
   mesa: MesaFila;
   cedula: CedulaMesaDTO;
   columna: ColumnaCedulaDTO;
+  personeros: UsuarioDTO[];
   onCancelar: () => void;
   onGuardado: () => void;
 }) {
-  const [votos, setVotos] = useState<Record<string, number>>({});
-  const [blanco, setBlanco] = useState(0);
-  const [nulo, setNulo] = useState(0);
-  const [impugnado, setImpugnado] = useState(0);
+  const { usuario } = useAuth();
+  const [votos, setVotos] = useState<Record<string, string>>({});
+  const [blanco, setBlanco] = useState('');
+  const [nulo, setNulo] = useState('');
+  const [impugnado, setImpugnado] = useState('');
+  const [observaciones, setObservaciones] = useState('');
+  const [foto, setFoto] = useState<string | null>(null);
+  const [comprimiendo, setComprimiendo] = useState(false);
+  const [titularId, setTitularId] = useState(mesa.personeroId ?? '');
   const [guardando, setGuardando] = useState(false);
-  const soloLectura = columna.estado === 'VALIDADA';
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const validos = Object.values(votos).reduce((a, b) => a + b, 0);
-  const totalEmitidos = validos + blanco + nulo + impugnado;
+  const numero = (s: string) => Math.max(0, parseInt(s, 10) || 0);
+  const soloDigitos = (v: string) => v.replace(/\D/g, '').slice(0, 5);
+  const validos = useMemo(() => Object.values(votos).reduce((a, b) => a + numero(b), 0), [votos]);
+  const totalEmitidos = validos + numero(blanco) + numero(nulo) + numero(impugnado);
+  const excede = totalEmitidos > cedula.electoresHabiles;
 
-  function cambiar(listaId: string, delta: number) {
-    setVotos((prev) => ({ ...prev, [listaId]: Math.max(0, (prev[listaId] ?? 0) + delta) }));
-  }
-
-  function fijar(listaId: string, valor: string) {
-    const n = Math.max(0, parseInt(valor, 10) || 0);
-    setVotos((prev) => ({ ...prev, [listaId]: n }));
+  async function elegirFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    if (!archivo) return;
+    setComprimiendo(true);
+    try {
+      setFoto(await comprimirImagen(archivo));
+    } catch {
+      setError('No se pudo leer la imagen seleccionada');
+    } finally {
+      setComprimiendo(false);
+    }
   }
 
   async function guardar() {
+    setError(null);
+    if (excede && !confirm(`El total emitido (${totalEmitidos}) supera los ${cedula.electoresHabiles} electores hábiles. ¿Registrar de todos modos?`)) {
+      return;
+    }
     setGuardando(true);
     try {
       const resultados: ResultadoInput[] = [
-        ...columna.listas.map((l) => ({ listaCandidaturaId: l.id, tipo: 'VOTO_LISTA' as const, votos: votos[l.id] ?? 0 })),
-        { listaCandidaturaId: null, tipo: 'BLANCO' as const, votos: blanco },
-        { listaCandidaturaId: null, tipo: 'NULO' as const, votos: nulo },
-        { listaCandidaturaId: null, tipo: 'IMPUGNADO' as const, votos: impugnado },
+        ...columna.listas.map((l) => ({ listaCandidaturaId: l.id, tipo: 'VOTO_LISTA' as const, votos: numero(votos[l.id] ?? '') })),
+        { listaCandidaturaId: null, tipo: 'BLANCO' as const, votos: numero(blanco) },
+        { listaCandidaturaId: null, tipo: 'NULO' as const, votos: numero(nulo) },
+        { listaCandidaturaId: null, tipo: 'IMPUGNADO' as const, votos: numero(impugnado) },
       ];
-      const clienteId = crypto.randomUUID();
-      await db.actas.add({
-        clienteId,
-        mesaId: mesa.id,
-        mesaCodigo: mesa.codigo,
+      const input: ActaSyncInput = {
+        clienteId: crypto.randomUUID(),
+        mesaId: cedula.mesaId,
         cargo: columna.cargo,
         resultados,
+        observaciones: observaciones || undefined,
+        fotoBase64: foto ?? undefined,
         digitadaEn: new Date().toISOString(),
-        estado: 'pendiente',
-      });
+        personeroId: titularId || undefined,
+      };
+      await apiFetch<ActaSyncResult>('/api/actas/sync', { method: 'POST', body: JSON.stringify(input) });
       onGuardado();
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) setError('Este cargo ya tiene un acta registrada para esta mesa.');
+      else setError(e instanceof ApiError ? e.message : 'No se pudo registrar el acta (¿sin conexión?)');
     } finally {
       setGuardando(false);
     }
   }
 
   return (
-    <div className="modal-fondo" onClick={onCancelar}>
+    <div className="modal-fondo">
       <div className="modal ancho" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
@@ -407,64 +358,101 @@ function FormularioCargo({
               {cedula.localVotacion} · {cedula.distrito}
             </p>
           </div>
-          <button onClick={onCancelar}>×</button>
+          <button onClick={onCancelar}>
+            <IconClose />
+          </button>
         </div>
 
-        <div className="cargo-card estado-SIN_REGISTRAR" style={{ marginBottom: 16 }}>
-          <div>
-            <div className="titulo">{tituloCorto(columna.cargo)}</div>
-            <div className="subtitulo">{columna.titulo}</div>
-          </div>
+        <div className="banner-cargo-admin">{columna.titulo}</div>
+
+        {error && <div className="mensaje error">{error}</div>}
+
+        <div className="form-row">
+          <label>Registrar a nombre de</label>
+          <select value={titularId} onChange={(e) => setTitularId(e.target.value)}>
+            <option value="">{usuario?.nombre} (yo)</option>
+            {personeros.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre} — DNI {p.dni}
+                {p.id === mesa.personeroId ? ' (asignado a esta mesa)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {columna.listas.map((lista) => (
-          <div key={lista.id} className="stepper-row">
-            {lista.simboloUrl && <img src={lista.simboloUrl} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />}
-            <span className="nombre">{lista.organizacion}</span>
-            <div className="stepper">
-              <button type="button" onClick={() => cambiar(lista.id, -1)} disabled={soloLectura}>
-                −
-              </button>
-              <input
-                type="number"
-                min={0}
-                inputMode="numeric"
-                value={votos[lista.id] ?? 0}
-                onChange={(e) => fijar(lista.id, e.target.value)}
-                disabled={soloLectura}
-              />
-              <button type="button" onClick={() => cambiar(lista.id, 1)} disabled={soloLectura}>
-                +
-              </button>
-            </div>
-          </div>
-        ))}
+        <table className="tabla tabla-votos">
+          <thead>
+            <tr>
+              <th>Organización</th>
+              <th style={{ textAlign: 'right' }}>Votos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {columna.listas.map((lista, i) => (
+              <tr key={lista.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {lista.simboloUrl && (
+                      <img src={lista.simboloUrl} alt="" className="simbolo-fila" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    )}
+                    {lista.organizacion}
+                  </div>
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <input
+                    className="caja-votos-admin"
+                    inputMode="numeric"
+                    placeholder="0"
+                    autoFocus={i === 0}
+                    value={votos[lista.id] ?? ''}
+                    onChange={(e) => setVotos((prev) => ({ ...prev, [lista.id]: soloDigitos(e.target.value) }))}
+                  />
+                </td>
+              </tr>
+            ))}
+            {[
+              ['En blanco', blanco, setBlanco],
+              ['Nulos', nulo, setNulo],
+              ['Impugnados', impugnado, setImpugnado],
+            ].map(([etiqueta, valor, set]) => (
+              <tr key={etiqueta as string}>
+                <td>{etiqueta as string}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <input
+                    className="caja-votos-admin"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={valor as string}
+                    onChange={(e) => (set as (v: string) => void)(soloDigitos(e.target.value))}
+                  />
+                </td>
+              </tr>
+            ))}
+            <tr className="fila-total-acta">
+              <td>
+                <strong>Total</strong> <span className="subtexto">({validos} válidos)</span>
+              </td>
+              <td style={{ textAlign: 'right', color: excede ? 'var(--color-error)' : undefined }}>
+                <strong>
+                  {totalEmitidos} de {cedula.electoresHabiles} hábiles
+                </strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div className="especiales-grid">
-          <div>
-            <label>Blancos</label>
-            <input type="number" min={0} value={blanco} onChange={(e) => setBlanco(Math.max(0, parseInt(e.target.value, 10) || 0))} disabled={soloLectura} />
+        <div className="form-grid" style={{ marginTop: 14 }}>
+          <div className="form-row">
+            <label>Foto del acta física (opcional)</label>
+            <button type="button" className="btn secundario" onClick={() => fileRef.current?.click()} disabled={comprimiendo}>
+              <IconCamera /> {comprimiendo ? 'Comprimiendo…' : foto ? 'Cambiar foto' : 'Subir foto'}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={elegirFoto} />
+            {foto && <img src={foto} alt="Foto del acta" className="previa-foto-admin" />}
           </div>
-          <div>
-            <label>Nulos</label>
-            <input type="number" min={0} value={nulo} onChange={(e) => setNulo(Math.max(0, parseInt(e.target.value, 10) || 0))} disabled={soloLectura} />
-          </div>
-          <div>
-            <label>Impugnados</label>
-            <input type="number" min={0} value={impugnado} onChange={(e) => setImpugnado(Math.max(0, parseInt(e.target.value, 10) || 0))} disabled={soloLectura} />
-          </div>
-        </div>
-
-        <div className="resumen-modal">
-          <div>
-            <span className="valor">{validos}</span>
-            Válidos
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span className="valor">
-              {totalEmitidos} de {cedula.electoresHabiles}
-            </span>
-            Total emitidos
+          <div className="form-row">
+            <label>Observaciones (opcional)</label>
+            <textarea value={observaciones} onChange={(e) => setObservaciones(e.target.value)} rows={4} className="textarea-admin" />
           </div>
         </div>
 
@@ -472,11 +460,9 @@ function FormularioCargo({
           <button className="btn secundario" onClick={onCancelar}>
             Cancelar
           </button>
-          {!soloLectura && (
-            <button className="btn" onClick={guardar} disabled={guardando}>
-              {guardando ? 'Guardando…' : 'Guardar acta'}
-            </button>
-          )}
+          <button className="btn" onClick={guardar} disabled={guardando || comprimiendo}>
+            {guardando ? 'Registrando…' : 'Registrar acta'}
+          </button>
         </div>
       </div>
     </div>

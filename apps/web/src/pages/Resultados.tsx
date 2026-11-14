@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import type { Cargo, ResultadosResumenDTO } from '@erm2026/shared';
+import { ELECCION, type Cargo, type ResultadosResumenDTO } from '@erm2026/shared';
 import { apiFetch, API_URL, ApiError } from '../lib/api';
 import { IconFile, IconCheck, IconUsers, IconBell } from '../components/Icons';
 
-const CARGOS: Cargo[] = ['GOBERNADOR_REGIONAL', 'CONSEJERO_REGIONAL', 'ALCALDE_PROVINCIAL', 'ALCALDE_DISTRITAL'];
 const CARGO_LABEL: Record<Cargo, string> = {
   GOBERNADOR_REGIONAL: 'Gobernador regional',
   CONSEJERO_REGIONAL: 'Consejero regional',
@@ -46,6 +45,7 @@ export default function Resultados() {
   if (!resumen) return <p>Cargando…</p>;
 
   const cargo = resumen.porCargo.find((c) => c.cargo === cargoActivo) ?? resumen.porCargo[0];
+  if (!cargo) return <div className="vacio">No hay listas de candidatura cargadas.</div>;
   const porcentajeAvance = resumen.actasEsperadas > 0 ? Math.round((resumen.actasRecibidas / resumen.actasEsperadas) * 1000) / 10 : 0;
 
   return (
@@ -57,7 +57,9 @@ export default function Resultados() {
         </div>
         <div className="filtros">
           <select value="regionales" onChange={() => {}} disabled title="Por ahora solo hay una elección configurada">
-            <option value="regionales">Elecciones Regionales y Municipales</option>
+            <option value="regionales">
+              {ELECCION.nombre} — {ELECCION.region}
+            </option>
           </select>
           <select value={provincia} onChange={(e) => setProvincia(e.target.value)}>
             <option value="">Todas las provincias</option>
@@ -123,13 +125,17 @@ export default function Resultados() {
               {resumen.actasRecibidas} actas · {resumen.mesasCubiertas} mesas contabilizadas
             </p>
           </div>
-          <div className="tabs-cargo">
-            {CARGOS.map((c) => (
-              <button key={c} className={c === cargoActivo ? 'activo' : ''} onClick={() => setCargoActivo(c)}>
-                {CARGO_LABEL[c]}
-              </button>
-            ))}
-          </div>
+          {resumen.porCargo.length > 1 ? (
+            <div className="tabs-cargo">
+              {resumen.porCargo.map(({ cargo: c }) => (
+                <button key={c} className={c === cargo.cargo ? 'activo' : ''} onClick={() => setCargoActivo(c)}>
+                  {CARGO_LABEL[c]}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className="badge-cargo-unico">{cargo.titulo}</span>
+          )}
         </div>
 
         {cargo.organizaciones.length === 0 && <div className="vacio">Aún no hay resultados registrados para este cargo.</div>}

@@ -170,12 +170,12 @@ export default function ActasRecibidas() {
   );
 }
 
-function ModalDetalleActa({
+export function ModalDetalleActa({
   resumen,
   onCerrar,
   onValidada,
 }: {
-  resumen: ActaResumenDTO;
+  resumen: Omit<ActaResumenDTO, 'id' | 'digitadaEn' | 'tieneFoto' | 'provincia'>;
   onCerrar: () => void;
   onValidada: () => void;
 }) {
@@ -226,8 +226,8 @@ function ModalDetalleActa({
 
         {error && <div className="mensaje error">{error}</div>}
 
-        <span className={`badge-estado ${resumen.estado}`} style={{ marginBottom: 14, display: 'inline-block' }}>
-          {ESTADO_LABEL[resumen.estado]}
+        <span className={`badge-estado ${detalle?.estado ?? resumen.estado}`} style={{ marginBottom: 14, display: 'inline-block' }}>
+          {ESTADO_LABEL[detalle?.estado ?? resumen.estado]}
         </span>
 
         <div className="grid-detalle-acta">
@@ -243,7 +243,7 @@ function ModalDetalleActa({
           </div>
           <div>
             <span className="etiqueta">Personero</span>
-            <span className="valor">{resumen.personeroNombre}</span>
+            <span className="valor">{detalle?.personeroNombre ?? resumen.personeroNombre}</span>
           </div>
           <div>
             <span className="etiqueta">Registrada</span>

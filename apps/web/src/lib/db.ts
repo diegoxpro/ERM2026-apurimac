@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Cargo, CatalogoDTO, ResultadoInput } from '@erm2026/shared';
+import { ELECCION, type Cargo, type CatalogoDTO, type ResultadoInput } from '@erm2026/shared';
 
 export interface ActaLocal {
   clienteId: string;
@@ -35,7 +35,8 @@ class ERM2026DB extends Dexie {
 
 export const db = new ERM2026DB();
 
-export const CATALOGO_CACHE_ID = 'catalogo-apurimac-2026';
+// Ligado a la región: un catálogo offline de otra elección no debe reutilizarse.
+export const CATALOGO_CACHE_ID = `catalogo-${ELECCION.regionMayus}-2026`;
 
 export async function getCatalogoCache(): Promise<CatalogoDTO | null> {
   const row = await db.catalogo.get(CATALOGO_CACHE_ID);
