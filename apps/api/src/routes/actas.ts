@@ -55,6 +55,10 @@ export function buildActasRouter(io: SocketIOServer) {
 
     const mesa = await prisma.mesa.findUnique({ where: { id: input.mesaId } });
     if (!mesa) return res.status(404).json({ error: 'Mesa no encontrada' });
+    // El personero entra solo con su DNI, así que solo puede enviar actas de sus propias mesas.
+    if (req.usuario!.rol === 'PERSONERO' && mesa.personeroId !== req.usuario!.sub) {
+      return res.status(403).json({ error: 'Esta mesa no está asignada a ti' });
+    }
 
     const yaRegistrada = await prisma.acta.findUnique({
       where: { mesaId_cargo: { mesaId: input.mesaId, cargo: input.cargo } },

@@ -10,7 +10,7 @@ interface UsuarioSesion {
 interface AuthContextValue {
   usuario: UsuarioSesion | null;
   cargando: boolean;
-  login: (dni: string, password: string) => Promise<UsuarioSesion>;
+  login: (dni: string) => Promise<UsuarioSesion>;
   logout: () => void;
 }
 
@@ -35,14 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCargando(false);
   }, []);
 
-  async function login(dni: string, password: string) {
-    const res = await apiFetch<{ token: string; usuario: UsuarioSesion }>('/api/auth/login', {
+  async function login(dni: string) {
+    const res = await apiFetch<{ token: string; usuario: UsuarioSesion }>('/api/auth/login-personero', {
       method: 'POST',
-      body: JSON.stringify({ dni, password }),
+      body: JSON.stringify({ dni }),
     });
-    if (res.usuario.rol !== 'PERSONERO') {
-      throw new ApiError(403, 'Esta aplicación es solo para personeros. Usa el panel administrativo con tu usuario.');
-    }
     localStorage.setItem(TOKEN_KEY, res.token);
     localStorage.setItem(USUARIO_KEY, JSON.stringify(res.usuario));
     setUsuario(res.usuario);

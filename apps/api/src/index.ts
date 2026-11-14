@@ -20,6 +20,9 @@ const app = express();
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, { cors: { origin: CORS_ORIGIN } });
 
+// Delante de la API hay 2 proxies (Nginx Proxy Manager -> nginx de cada app):
+// así req.ip es la IP real del cliente, necesaria para limitar intentos de login.
+app.set('trust proxy', 2);
 app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '1mb' }));

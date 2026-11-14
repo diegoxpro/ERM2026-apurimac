@@ -128,7 +128,7 @@ export interface CrearUsuarioInput {
   email?: string;
   telefono?: string;
   rol: RolUsuario;
-  password: string;
+  password?: string; // opcional para PERSONERO (entran solo con DNI)
   coordinadorId?: string | null;
 }
 

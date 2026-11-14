@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth, requiereRol } from '../lib/auth';
@@ -73,7 +74,8 @@ const crearUsuarioSchema = z.object({
   email: z.string().email().optional(),
   telefono: z.string().optional(),
   rol: z.enum(['ADMIN', 'COORDINADOR', 'PERSONERO']),
-  password: z.string().min(6),
+  // Los personeros entran solo con DNI; para ellos la contraseña es opcional.
+  password: z.string().min(6).optional(),
   coordinadorId: z.string().nullable().optional(),
 });
 
@@ -95,7 +97,11 @@ usuariosRouter.post('/', async (req, res) => {
   const existente = await prisma.usuario.findUnique({ where: { dni: input.dni } });
   if (existente) return res.status(409).json({ error: 'Ya existe un usuario con ese DNI' });
 
-  const passwordHash = await bcrypt.hash(input.password, 10);
+  if (!input.password && input.rol !== 'PERSONERO') {
+    return res.status(400).json({ error: 'La contraseña es obligatoria para administradores y coordinadores' });
+  }
+  // Sin contraseña se guarda un hash de un valor aleatorio: nadie puede usarla en /login.
+  const passwordHash = await bcrypt.hash(input.password ?? randomBytes(32).toString('hex'), 10);
   const usuario = await prisma.usuario.create({
     data: {
       nombre: input.nombre,

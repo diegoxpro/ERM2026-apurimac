@@ -198,7 +198,7 @@ function ModalNuevoUsuario({
         email: email || undefined,
         telefono: telefono || undefined,
         rol,
-        password,
+        password: rol === 'PERSONERO' ? undefined : password,
         coordinadorId: rol === 'PERSONERO' ? coordinadorId : undefined,
       };
       await apiFetch('/api/usuarios', { method: 'POST', body: JSON.stringify(input) });
@@ -268,10 +268,16 @@ function ModalNuevoUsuario({
               <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
             </div>
           </div>
-          <div className="form-row">
-            <label>Contraseña</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-          </div>
+          {rol === 'PERSONERO' ? (
+            <p className="subtexto" style={{ marginTop: 0 }}>
+              Los personeros ingresan a la app solo con su DNI; no necesitan contraseña.
+            </p>
+          ) : (
+            <div className="form-row">
+              <label>Contraseña</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            </div>
+          )}
           <div className="modal-footer">
             <button type="button" className="btn secundario" onClick={onCerrar}>
               Cancelar

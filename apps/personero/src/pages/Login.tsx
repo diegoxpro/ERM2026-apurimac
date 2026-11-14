@@ -10,7 +10,6 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [dni, setDni] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [mostrarGuia, setMostrarGuia] = useState(false);
@@ -20,7 +19,7 @@ export default function Login() {
     setError(null);
     setCargando(true);
     try {
-      await login(dni, password);
+      await login(dni);
       navigate('/', { replace: true });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo conectar al servidor');
@@ -36,7 +35,7 @@ export default function Login() {
           <IconShieldCheck />
         </div>
         <h1>Personeros</h1>
-        <p>Ingresa con tu DNI y contraseña</p>
+        <p>Ingresa con tu DNI</p>
 
         {error && <div className="mensaje error">{error}</div>}
 
@@ -49,21 +48,14 @@ export default function Login() {
               onChange={(e) => setDni(e.target.value.replace(/\D/g, '').slice(0, 8))}
               inputMode="numeric"
               placeholder="12345678"
+              pattern="\d{8}"
+              title="El DNI tiene 8 dígitos"
+              autoComplete="username"
               required
               autoFocus
             />
           </div>
-          <div className="form-row">
-            <label htmlFor="password">Contraseña</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="btn btn-login" disabled={cargando}>
+          <button type="submit" className="btn btn-login" disabled={cargando || dni.length !== 8}>
             {cargando ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
