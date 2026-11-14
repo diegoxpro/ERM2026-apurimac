@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { analizarArchivo, ejecutarImportacion, aDTO as aDTOImportacion } from '../lib/importarUsuarios';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth, requiereRol } from '../lib/auth';
@@ -66,6 +67,21 @@ usuariosRouter.get('/', async (req, res) => {
     orderBy: { createdAt: 'desc' },
   });
   res.json(usuarios.map(aDTO));
+});
+
+// Carga masiva desde Excel. Con confirmar=false solo valida y devuelve la vista
+// previa; con confirmar=true vuelve a validar el mismo archivo y lo aplica.
+usuariosRouter.post('/importar', async (req, res) => {
+  const archivoBase64 = typeof req.body?.archivoBase64 === 'string' ? req.body.archivoBase64 : '';
+  if (!archivoBase64) return res.status(400).json({ error: 'Adjunta el archivo Excel' });
+  try {
+    const filas = await analizarArchivo(Buffer.from(archivoBase64, 'base64'), req.usuario!);
+    if (req.body.confirmar !== true) return res.json({ filas: aDTOImportacion(filas) });
+    const resultado = await ejecutarImportacion(filas, req.usuario!);
+    res.json({ filas: aDTOImportacion(filas), resultado });
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'No se pudo procesar el archivo' });
+  }
 });
 
 const crearUsuarioSchema = z.object({

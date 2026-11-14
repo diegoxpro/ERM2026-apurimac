@@ -25,6 +25,8 @@ const io = new SocketIOServer(httpServer, { cors: { origin: CORS_ORIGIN } });
 app.set('trust proxy', 2);
 app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN }));
+// La carga masiva sube el Excel en base64: límite mayor solo en esa ruta.
+app.use('/api/usuarios/importar', express.json({ limit: '10mb' }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));

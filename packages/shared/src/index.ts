@@ -132,6 +132,31 @@ export interface CrearUsuarioInput {
   coordinadorId?: string | null;
 }
 
+// --- Carga masiva de usuarios (Excel) ---
+
+export interface FilaImportacionDTO {
+  fila: number; // número de fila en el Excel
+  dni: string;
+  nombre: string;
+  rol: RolUsuario | null;
+  dependeDe: string;
+  correo: string;
+  telefono: string;
+  mesas: string[];
+  accion: 'crear' | 'actualizar' | 'error';
+  errores: string[];
+  avisos: string[];
+}
+
+export interface ResultadoImportacionDTO {
+  creados: number;
+  actualizados: number;
+  omitidos: number;
+  mesasAsignadas: number;
+  // Contraseñas temporales de admins/coordinadores nuevos: se muestran una sola vez.
+  credenciales: { dni: string; nombre: string; rol: RolUsuario; password: string }[];
+}
+
 export interface ActualizarUsuarioInput {
   nombre?: string;
   email?: string;

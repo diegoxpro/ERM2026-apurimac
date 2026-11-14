@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CrearUsuarioInput, DniConsultaDTO, RolUsuario, UsuarioDTO } from '@erm2026/shared';
+import ModalCargaMasiva from './CargaMasivaUsuarios';
 import { apiFetch, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
@@ -16,6 +17,7 @@ export default function Usuarios() {
   const [filtroRol, setFiltroRol] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarCarga, setMostrarCarga] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
 
   async function cargar() {
@@ -55,9 +57,14 @@ export default function Usuarios() {
           <h2>Usuarios</h2>
           <p>Coordinadores y personeros de tu estructura</p>
         </div>
-        <button className="btn" onClick={() => setMostrarModal(true)}>
-          + Nuevo usuario
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn secundario" onClick={() => setMostrarCarga(true)}>
+            Carga masiva (Excel)
+          </button>
+          <button className="btn" onClick={() => setMostrarModal(true)}>
+            + Nuevo usuario
+          </button>
+        </div>
       </div>
 
       {mensaje && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}
@@ -120,6 +127,15 @@ export default function Usuarios() {
           </table>
         )}
       </div>
+
+      {mostrarCarga && (
+        <ModalCargaMasiva
+          onCerrar={() => {
+            setMostrarCarga(false);
+            cargar();
+          }}
+        />
+      )}
 
       {mostrarModal && (
         <ModalNuevoUsuario
