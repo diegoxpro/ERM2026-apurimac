@@ -7,13 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Personeros — Lambayeque 2026',
         short_name: 'Personeros',
         description: 'Registro de actas para personeros — Segunda vuelta regional 2026, Lambayeque',
         theme_color: '#1D428A',
-        background_color: '#f4f6f5',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
