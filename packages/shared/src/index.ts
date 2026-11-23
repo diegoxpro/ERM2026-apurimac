@@ -117,6 +117,8 @@ export interface LecturaActaDTO {
   totalEmitidos: number | null;
   electoresHabilesLeido: number | null;
   avisos: string[]; // cosas que la persona debe revisar (dudas de la IA, no cuadra, etc.)
+  // Si esa mesa + cargo ya tiene un acta registrada en el servidor.
+  yaEnviada?: { actaId: string; estado: EstadoActa; personeroNombre: string; digitadaEn: string } | null;
 }
 
 export interface ActaSyncResult {

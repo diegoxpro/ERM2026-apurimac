@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ELECCION, type CedulaMesaDTO } from '@erm2026/shared';
 import { obtenerCedula, getMesasAsignadasCount, tituloCorto, ESTADO_LABEL } from '../lib/mesas';
 import { hayPendientes, sincronizarPendientes, getUltimaSync } from '../lib/sync';
 import { useAuth } from '../lib/auth';
+import { db, type ActaLocal } from '../lib/db';
+import LeerActaConFoto from '../components/LeerActaConFoto';
 import { IconArrowLeft, IconLogout, IconRefresh, IconCloudCheck, IconChevronRight, IconPin, IconBuilding } from '../components/Icons';
 
 function tiempoRelativo(fecha: Date): string {
@@ -17,11 +19,14 @@ function tiempoRelativo(fecha: Date): string {
   return `hace ${dias} d`;
 }
 
-export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string }) {
+export default function MesaDetalle({ mesaId: mesaIdProp, mesasPropias }: { mesaId?: string; mesasPropias?: Set<string> }) {
   const params = useParams();
   const mesaId = mesaIdProp ?? params.mesaId!;
   const navigate = useNavigate();
+  const location = useLocation();
+  const noAsignada = !mesaIdProp && !!(location.state as { noAsignada?: boolean } | null)?.noAsignada;
   const { logout } = useAuth();
+  const [duplicadas, setDuplicadas] = useState<ActaLocal[]>([]);
   const [cedula, setCedula] = useState<CedulaMesaDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendientes, setPendientes] = useState(false);
@@ -37,6 +42,7 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
       setError(e instanceof Error ? e.message : 'No se pudo cargar la mesa');
     }
     setPendientes(await hayPendientes());
+    setDuplicadas(await db.actas.where('estado').equals('duplicada').toArray());
   }, [mesaId]);
 
   useEffect(() => {
@@ -56,10 +62,16 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
     await sincronizarPendientes();
     setUltimaSync(getUltimaSync());
     setPendientes(await hayPendientes());
+    setDuplicadas(await db.actas.where('estado').equals('duplicada').toArray());
     setSincronizando(false);
   }
 
-  const mostrarVolver = getMesasAsignadasCount() > 1;
+  const mostrarVolver = noAsignada || getMesasAsignadasCount() > 1;
+
+  async function entendidoDuplicadas() {
+    await Promise.all(duplicadas.map((a) => db.actas.update(a.clienteId, { estado: 'duplicada_vista' })));
+    setDuplicadas([]);
+  }
 
   if (error && !cedula) {
     return (
@@ -98,6 +110,27 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
           <IconLogout />
         </button>
       </div>
+
+      {noAsignada && (
+        <div className="aviso-no-asignada">
+          Esta mesa no está asignada a ti. Puedes enviar sus actas igual; quedará registrado que las enviaste tú.
+        </div>
+      )}
+
+      {duplicadas.length > 0 && (
+        <div className="aviso-no-asignada">
+          {duplicadas.map((a) => (
+            <div key={a.clienteId} style={{ marginBottom: 6 }}>
+              <strong>Mesa {a.mesaCodigo}:</strong> {a.ultimoError ?? 'Esta acta ya fue enviada.'}
+            </div>
+          ))}
+          <button className="btn secundario" style={{ marginTop: 6 }} onClick={entendidoDuplicadas}>
+            Entendido
+          </button>
+        </div>
+      )}
+
+      {mesasPropias && <LeerActaConFoto mesasPropias={mesasPropias} />}
 
       <div className={`banner-sync ${pendientes ? 'pendiente' : 'ok'}`}>
         <div className="banner-sync-texto">
@@ -154,7 +187,7 @@ export default function MesaDetalle({ mesaId: mesaIdProp }: { mesaId?: string })
             <button
               key={col.cargo}
               className={`tarjeta-cargo estado-${col.estado}`}
-              onClick={() => navigate(`/mesa/${cedula.mesaId}/cargo/${col.cargo}`)}
+              onClick={() => navigate(`/mesa/${cedula.mesaId}/cargo/${col.cargo}`, { state: { noAsignada } })}
             >
               <div className="tarjeta-cargo-info">
                 <strong>{tituloCorto(col.cargo)}</strong>

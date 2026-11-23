@@ -49,14 +49,17 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
         // (p.ej. quedó una copia local duplicada por un doble toque en "Guardar").
         // El servidor ya tiene el dato: lo tratamos como sincronizado, no como error,
         // para no dejar el banner de "pendientes" atascado para siempre.
+        // Si la envió OTRA persona, se marca como "duplicada" para avisarle al personero
+        // que esa acta ya fue enviada (no se borra del teléfono).
         if (e instanceof ApiError && e.status === 409) {
-          const body = e.body as { actaId?: string; estado?: string } | undefined;
+          const body = e.body as { actaId?: string; estado?: string; mismoPersonero?: boolean } | undefined;
+          const deOtro = body?.mismoPersonero === false;
           await db.actas.update(acta.clienteId, {
-            estado: 'sincronizada',
+            estado: deOtro ? 'duplicada' : 'sincronizada',
             actaId: body?.actaId,
-            ultimoError: undefined,
+            ultimoError: deOtro ? e.message : undefined,
           });
-          enviadas++;
+          if (!deOtro) enviadas++;
           continue;
         }
         const mensaje = e instanceof ApiError ? e.message : 'Error de red';

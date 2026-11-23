@@ -456,8 +456,7 @@ function FormularioActa({
       await apiFetch<ActaSyncResult>('/api/actas/sync', { method: 'POST', body: JSON.stringify(input) });
       onGuardado();
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) setError('Este cargo ya tiene un acta registrada para esta mesa.');
-      else setError(e instanceof ApiError ? e.message : 'No se pudo registrar el acta (¿sin conexión?)');
+      setError(e instanceof ApiError ? e.message : 'No se pudo registrar el acta (¿sin conexión?)');
     } finally {
       setGuardando(false);
     }

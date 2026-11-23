@@ -185,6 +185,8 @@ function Formulario({
   const [avisosIA, setAvisosIA] = useState<string[]>([]);
   const [mensajeIA, setMensajeIA] = useState<{ tipo: 'info' | 'error'; texto: string } | null>(null);
   const [revisado, setRevisado] = useState(false);
+  const [errorGuardar, setErrorGuardar] = useState<string | null>(null);
+  const noAsignada = !!(location.state as { noAsignada?: boolean } | null)?.noAsignada;
   const [conIA, setConIA] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -308,6 +310,13 @@ function Formulario({
       });
       await db.fotosPorLeer.delete(claveFoto(mesaId, columna.cargo));
       if (navigator.onLine) await sincronizarPendientes();
+      const guardada = await db.actas.get(clienteId);
+      if (guardada?.estado === 'duplicada') {
+        // Otra persona ya envió esta acta: se avisa y no se registra otra vez.
+        await db.actas.update(clienteId, { estado: 'duplicada_vista' });
+        setErrorGuardar(guardada.ultimoError ?? 'Esta acta ya fue enviada. No se registró otra vez.');
+        return;
+      }
       navigate(-1);
     } finally {
       setGuardando(false);
@@ -331,6 +340,11 @@ function Formulario({
       <div className="banner-cargo">{columna.titulo}</div>
 
       <div className="contenido-formulario">
+        {noAsignada && (
+          <div className="aviso-no-asignada">
+            Esta mesa no está asignada a ti. Puedes enviar el acta igual; quedará registrado que la enviaste tú.
+          </div>
+        )}
         <button type="button" className="fila-foto fila-foto-ia" onClick={() => fileRef.current?.click()} disabled={comprimiendo || leyendo}>
           <span className="fila-foto-icono">
             <IconCamera />
@@ -441,6 +455,7 @@ function Formulario({
             Revisé los números con el acta física
           </label>
         )}
+        {errorGuardar && <div className="mensaje error">{errorGuardar}</div>}
         <button className="btn btn-guardar" onClick={guardar} disabled={guardando || comprimiendo || leyendo || (leidaPorIA && !revisado)}>
           {guardando ? 'Guardando…' : noCuadra ? 'Guardar como observada' : 'Guardar acta'}
         </button>

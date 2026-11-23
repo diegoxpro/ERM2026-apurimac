@@ -12,7 +12,8 @@ export interface ActaLocal {
   digitadaEn: string;
   totalEmitidosActa?: number;
   leidaPorIA?: boolean;
-  estado: 'pendiente' | 'sincronizada' | 'error';
+  // duplicada: el servidor ya tenía esa acta (enviada por otra persona); duplicada_vista: el personero ya vio el aviso.
+  estado: 'pendiente' | 'sincronizada' | 'error' | 'duplicada' | 'duplicada_vista';
   ultimoError?: string;
   actaId?: string;
 }
