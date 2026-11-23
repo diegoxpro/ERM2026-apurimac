@@ -56,8 +56,10 @@ export default function Home() {
     );
   }
 
-  if (mesas!.length === 1) {
-    return <MesaDetalle mesaId={mesas![0].id} mesasPropias={new Set([mesas![0].id])} />;
+  const propias = new Set(mesas!.filter((m) => m.asignada).map((m) => m.id));
+
+  if (mesas!.length === 1 && mesas![0].asignada) {
+    return <MesaDetalle mesaId={mesas![0].id} mesasPropias={propias} />;
   }
 
   return (
@@ -65,18 +67,25 @@ export default function Home() {
       <div className="app-bar">
         <div>
           <h1>Mis mesas</h1>
-          <p>Elige la mesa que vas a registrar</p>
+          <p>{propias.size > 0 ? 'Elige la mesa que vas a registrar' : 'Todavía no tienes mesas asignadas'}</p>
         </div>
         <button className="icon-btn-top" onClick={logout} title="Cerrar sesión">
           <IconLogout />
         </button>
       </div>
-      <LeerActaConFoto mesasPropias={new Set(mesas!.map((m) => m.id))} />
+      <LeerActaConFoto mesasPropias={propias} />
       <div className="lista-mesas">
         {mesas!.map((m) => (
-          <button key={m.id} className="tarjeta-mesa" onClick={() => navigate(`/mesa/${m.id}`)}>
+          <button
+            key={m.id}
+            className="tarjeta-mesa"
+            onClick={() => navigate(`/mesa/${m.id}`, { state: m.asignada ? undefined : { noAsignada: true } })}
+          >
             <div className="tarjeta-mesa-info">
-              <strong>Mesa {m.codigo}</strong>
+              <strong>
+                Mesa {m.codigo}
+                {!m.asignada && <em className="etiqueta-no-asignada">No asignada</em>}
+              </strong>
               <span>
                 {m.localVotacion} · {m.distrito}
               </span>

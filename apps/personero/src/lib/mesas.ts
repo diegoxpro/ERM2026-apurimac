@@ -11,26 +11,30 @@ export interface MesaResumen {
   electores: number;
   actasRegistradas: number;
   actasEsperadas: number;
+  // false = el personero no tiene asignada esta mesa, pero envió (o tiene por enviar) un acta de ella.
+  asignada: boolean;
 }
 
 const MESAS_COUNT_KEY = 'erm2026_personero_mesas_count';
+const ASIGNADAS_KEY = 'erm2026_personero_mesas_asignadas';
 
+// Cantidad de mesas en "Mis mesas" (asignadas + las de actas enviadas por el personero).
 export function getMesasAsignadasCount(): number {
   return parseInt(localStorage.getItem(MESAS_COUNT_KEY) ?? '0', 10) || 0;
 }
 
-export async function obtenerMesasAsignadas(): Promise<MesaResumen[]> {
-  if (navigator.onLine) {
-    try {
-      const data = await apiFetch<{ items: MesaResumen[] }>('/api/mesas?mine=true&limit=50');
-      localStorage.setItem(MESAS_COUNT_KEY, String(data.items.length));
-      return data.items;
-    } catch {
-      // Cae al catálogo offline si la llamada falla.
-    }
+function getIdsAsignadas(): Set<string> | null {
+  const raw = localStorage.getItem(ASIGNADAS_KEY);
+  if (!raw) return null;
+  try {
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return null;
   }
-  const cacheadas = await getMesasCacheadas();
-  return cacheadas.map((c) => ({
+}
+
+function resumenDeCache(c: CedulaMesaDTO, asignada: boolean): MesaResumen {
+  return {
     id: c.mesaId,
     codigo: c.mesaCodigo,
     localVotacion: c.localVotacion,
@@ -39,7 +43,45 @@ export async function obtenerMesasAsignadas(): Promise<MesaResumen[]> {
     electores: c.electoresHabiles,
     actasRegistradas: c.columnas.filter((col) => col.estado !== 'SIN_REGISTRAR').length,
     actasEsperadas: c.columnas.length,
-  }));
+    asignada,
+  };
+}
+
+// "Mis mesas": las asignadas al personero más las mesas no asignadas de las que él
+// envió un acta (en el servidor) o tiene un acta guardada en este teléfono.
+export async function obtenerMesasAsignadas(): Promise<MesaResumen[]> {
+  const mesasConActaLocal = new Set(
+    (await db.actas.toArray()).filter((a) => a.estado !== 'duplicada' && a.estado !== 'duplicada_vista').map((a) => a.mesaId),
+  );
+  const cacheadas = await getMesasCacheadas();
+
+  let lista: MesaResumen[] | null = null;
+  if (navigator.onLine) {
+    try {
+      const data = await apiFetch<{ items: MesaResumen[] }>('/api/mesas?mine=true&limit=50');
+      lista = data.items.map((m) => ({ ...m, asignada: m.asignada !== false }));
+      localStorage.setItem(ASIGNADAS_KEY, JSON.stringify(lista.filter((m) => m.asignada).map((m) => m.id)));
+    } catch {
+      // Cae al catálogo offline si la llamada falla.
+    }
+  }
+
+  if (lista === null) {
+    const asignadas = getIdsAsignadas();
+    lista = cacheadas
+      .filter((c) => !asignadas || asignadas.has(c.mesaId) || mesasConActaLocal.has(c.mesaId))
+      .map((c) => resumenDeCache(c, !asignadas || asignadas.has(c.mesaId)));
+  } else {
+    // Actas guardadas en el teléfono que el servidor aún no tiene (sin señal o sync pendiente).
+    const enLista = new Set(lista.map((m) => m.id));
+    for (const c of cacheadas) {
+      if (!enLista.has(c.mesaId) && mesasConActaLocal.has(c.mesaId)) lista.push(resumenDeCache(c, false));
+    }
+  }
+
+  lista.sort((a, b) => Number(b.asignada) - Number(a.asignada) || a.codigo.localeCompare(b.codigo));
+  localStorage.setItem(MESAS_COUNT_KEY, String(lista.length));
+  return lista;
 }
 
 export async function obtenerCedula(mesaId: string): Promise<CedulaMesaDTO> {

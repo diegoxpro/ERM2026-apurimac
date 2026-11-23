@@ -28,7 +28,7 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
     if (mesasPropias) return mesasPropias.has(mesaId);
     try {
       const propias = await obtenerMesasAsignadas();
-      return propias.some((m) => m.id === mesaId);
+      return propias.some((m) => m.id === mesaId && m.asignada);
     } catch {
       return false;
     }
