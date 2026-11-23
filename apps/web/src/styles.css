@@ -413,3 +413,7 @@ button.btn svg { width: 16px; height: 16px; }
 .opcion-modelo.activa { border-color: var(--color-primario); background: #fff5f5; }
 .opcion-modelo input { margin-top: 3px; width: auto; flex: none; }
 .opcion-modelo > div { text-align: left; font-weight: normal; }
+
+/* --- Aviso de sesión expirada (encima de cualquier otro modal) --- */
+.modal-fondo.sesion { z-index: 100; }
+.aviso-sesion { font-size: 13px; line-height: 1.5; background: #fff7e6; border: 1px solid #f5d48a; border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; }

@@ -1,5 +1,5 @@
 import type { ActaSyncResult } from '@erm2026/shared';
-import { apiFetch, ApiError } from './api';
+import { apiFetch, ApiError, SesionExpiradaError } from './api';
 import { db } from './db';
 
 let sincronizando = false;
@@ -27,6 +27,9 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
         await db.actas.update(acta.clienteId, { estado: 'sincronizada', actaId: result.actaId, ultimoError: undefined });
         enviadas++;
       } catch (e) {
+        // Sesión vencida: el acta sigue pendiente en este dispositivo (no se marca
+        // como error ni se borra) y se enviará cuando la persona vuelva a ingresar.
+        if (e instanceof SesionExpiradaError) break;
         const mensaje = e instanceof ApiError ? e.message : 'Error de red';
         await db.actas.update(acta.clienteId, { estado: 'error', ultimoError: mensaje });
         fallidas++;

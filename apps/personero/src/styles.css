@@ -310,3 +310,16 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .alerta-revisar ul { margin: 6px 0 0; padding-left: 18px; }
 .check-revisado { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 10px; }
 .check-revisado input { width: 20px; height: 20px; }
+
+/* --- Aviso de sesión expirada (encima de cualquier otro modal) --- */
+.modal-fondo.sesion { z-index: 100; }
+.acciones-sesion { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.acciones-sesion .btn { width: 100%; }
+
+/* --- Actas de mesas no asignadas / duplicadas --- */
+.enlace-otra-mesa { width: 100%; background: none; border: none; color: var(--color-primario-oscuro); font-size: 13px; font-weight: 600; text-decoration: underline; padding: 6px 0 12px; cursor: pointer; }
+.buscar-otra-mesa { display: flex; gap: 8px; margin: 4px 0 12px; }
+.buscar-otra-mesa input { flex: 1; }
+.buscar-otra-mesa .btn { width: auto; padding-left: 18px; padding-right: 18px; }
+.aviso-no-asignada { background: #fff7e6; border: 1px solid #f5d48a; color: #7a5200; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin: 0 16px 12px; }
+.contenido-formulario .aviso-no-asignada { margin: 0 0 12px; }

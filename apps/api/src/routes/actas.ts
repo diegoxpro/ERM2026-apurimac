@@ -109,7 +109,7 @@ export function buildActasRouter(io: SocketIOServer) {
           : 'No se pudo leer el número de mesa en la foto.',
       );
     } else if (req.usuario!.rol === 'PERSONERO' && mesa.personeroId !== req.usuario!.sub) {
-      avisos.push(`La mesa ${mesa.codigo} no está asignada a ti; no podrás enviar esta acta.`);
+      avisos.push(`La mesa ${mesa.codigo} no está asignada a ti. Puedes enviar el acta igual; quedará registrado que la envió un personero no asignado.`);
     }
 
     // Cargo: el indicado, o el primero que tenga listas (en segunda vuelta solo hay Gobernador).
@@ -153,6 +153,19 @@ export function buildActasRouter(io: SocketIOServer) {
       }
     }
 
+    // ¿Esa acta (mesa + cargo) ya fue enviada? Se avisa para no registrarla dos veces.
+    let yaEnviada: LecturaActaDTO['yaEnviada'] = null;
+    if (mesa && cargo) {
+      const existente = await prisma.acta.findUnique({
+        where: { mesaId_cargo: { mesaId: mesa.id, cargo } },
+        include: { personero: true },
+      });
+      if (existente) {
+        yaEnviada = { actaId: existente.id, estado: existente.estado, personeroNombre: existente.personero.nombre, digitadaEn: existente.digitadaEn.toISOString() };
+        avisos.unshift(`Esta acta ya fue enviada por ${existente.personero.nombre}. No se registrará otra vez.`);
+      }
+    }
+
     const dto: LecturaActaDTO = {
       mesaCodigoLeido: lectura.mesa_codigo,
       mesaId: mesa?.id ?? null,
@@ -165,6 +178,7 @@ export function buildActasRouter(io: SocketIOServer) {
       totalEmitidos: lectura.total_emitidos,
       electoresHabilesLeido: lectura.electores_habiles,
       avisos,
+      yaEnviada,
     };
     res.json(dto);
   });
@@ -197,24 +211,30 @@ export function buildActasRouter(io: SocketIOServer) {
 
     const mesa = await prisma.mesa.findUnique({ where: { id: input.mesaId } });
     if (!mesa) return res.status(404).json({ error: 'Mesa no encontrada' });
-    // El personero entra solo con su DNI, así que solo puede enviar actas de sus propias mesas.
-    if (req.usuario!.rol === 'PERSONERO' && mesa.personeroId !== req.usuario!.sub) {
-      return res.status(403).json({ error: 'Esta mesa no está asignada a ti' });
-    }
+    // Un personero puede enviar el acta de una mesa que no tiene asignada (p.ej. cubre a
+    // un compañero): se acepta, pero queda anotado para que el coordinador lo revise.
+    const noAsignada = req.usuario!.rol === 'PERSONERO' && mesa.personeroId !== req.usuario!.sub;
 
     const yaRegistrada = await prisma.acta.findUnique({
       where: { mesaId_cargo: { mesaId: input.mesaId, cargo: input.cargo } },
+      include: { personero: true },
     });
     if (yaRegistrada) {
-      return res
-        .status(409)
-        .json({ error: 'Este cargo ya tiene un acta registrada para esta mesa', actaId: yaRegistrada.id, estado: yaRegistrada.estado });
+      const fecha = yaRegistrada.digitadaEn.toLocaleString('es-PE', { timeZone: 'America/Lima', dateStyle: 'short', timeStyle: 'short' });
+      return res.status(409).json({
+        error: `Esta acta ya fue enviada (mesa ${mesa.codigo}) por ${yaRegistrada.personero.nombre} el ${fecha}; no se registró otra vez.`,
+        actaId: yaRegistrada.id,
+        estado: yaRegistrada.estado,
+        personeroNombre: yaRegistrada.personero.nombre,
+        mismoPersonero: yaRegistrada.personeroId === personeroId,
+      });
     }
 
     const sumaVotos = input.resultados.reduce((a, r) => a + r.votos, 0);
     const problemas = problemasDeCuadre(sumaVotos, input.totalEmitidosActa, mesa.electores);
     const notas = [
       input.leidaPorIA ? '[Leída con IA y revisada]' : null,
+      noAsignada ? '[Enviada por un personero no asignado a esta mesa]' : null,
       ...problemas.map((p) => `[Observada automáticamente] ${p}.`),
       input.observaciones?.trim() || null,
     ].filter(Boolean);
