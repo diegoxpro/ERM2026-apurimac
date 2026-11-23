@@ -1,6 +1,7 @@
 import type { ActaSyncResult } from '@erm2026/shared';
-import { apiFetch, ApiError } from './api';
+import { apiFetch, ApiError, SesionExpiradaError } from './api';
 import { db } from './db';
+import { leerFotosEnCola } from './lector';
 
 let sincronizando = false;
 
@@ -34,23 +35,31 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
             observaciones: acta.observaciones,
             fotoBase64: acta.fotoDataUrl,
             digitadaEn: acta.digitadaEn,
+            totalEmitidosActa: acta.totalEmitidosActa,
+            leidaPorIA: acta.leidaPorIA,
           }),
         });
         await db.actas.update(acta.clienteId, { estado: 'sincronizada', actaId: result.actaId, ultimoError: undefined });
         enviadas++;
       } catch (e) {
+        // Sesión vencida: el acta sigue pendiente en este dispositivo (no se marca
+        // como error ni se borra) y se enviará cuando la persona vuelva a ingresar.
+        if (e instanceof SesionExpiradaError) break;
         // Un 409 significa que ese cargo de esa mesa YA tiene acta registrada
         // (p.ej. quedó una copia local duplicada por un doble toque en "Guardar").
         // El servidor ya tiene el dato: lo tratamos como sincronizado, no como error,
         // para no dejar el banner de "pendientes" atascado para siempre.
+        // Si la envió OTRA persona, se marca como "duplicada" para avisarle al personero
+        // que esa acta ya fue enviada (no se borra del teléfono).
         if (e instanceof ApiError && e.status === 409) {
-          const body = e.body as { actaId?: string; estado?: string } | undefined;
+          const body = e.body as { actaId?: string; estado?: string; mismoPersonero?: boolean } | undefined;
+          const deOtro = body?.mismoPersonero === false;
           await db.actas.update(acta.clienteId, {
-            estado: 'sincronizada',
+            estado: deOtro ? 'duplicada' : 'sincronizada',
             actaId: body?.actaId,
-            ultimoError: undefined,
+            ultimoError: deOtro ? e.message : undefined,
           });
-          enviadas++;
+          if (!deOtro) enviadas++;
           continue;
         }
         const mensaje = e instanceof ApiError ? e.message : 'Error de red';
@@ -73,10 +82,12 @@ export async function hayPendientes(): Promise<boolean> {
 export function iniciarSyncAutomatico() {
   window.addEventListener('online', () => {
     sincronizarPendientes();
+    leerFotosEnCola();
   });
   // Reintento periódico por si la conexión es intermitente pero el navegador
   // no dispara el evento "online" de forma confiable (común en zonas rurales).
   setInterval(() => {
     sincronizarPendientes();
+    leerFotosEnCola();
   }, 30_000);
 }

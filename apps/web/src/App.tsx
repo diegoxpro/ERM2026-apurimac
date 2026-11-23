@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './lib/auth';
 import Sidebar from './components/Sidebar';
+import SesionExpirada from './components/SesionExpirada';
 import { IconLogout } from './components/Icons';
 import Login from './pages/Login';
 import LlenarActas from './pages/LlenarActas';
@@ -10,6 +11,7 @@ import Usuarios from './pages/Usuarios';
 import LocalesYMesas from './pages/LocalesYMesas';
 import Asignacion from './pages/Asignacion';
 import ActasRecibidas from './pages/ActasRecibidas';
+import Configuracion from './pages/Configuracion';
 
 function useEnLinea() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -55,7 +57,7 @@ function Layout({ children }: { children: ReactNode }) {
             <div className="rol">{ROL_LABEL[usuario.rol] ?? usuario.rol}</div>
           </div>
           <div className="avatar">{iniciales(usuario.nombre)}</div>
-          <button className="icon-btn" onClick={logout} title="Salir">
+          <button className="icon-btn" onClick={logout} title="Cerrar sesión" aria-label="Cerrar sesión">
             <IconLogout />
           </button>
         </header>
@@ -82,6 +84,8 @@ export default function App() {
   if (cargando) return null;
 
   return (
+    <>
+    <SesionExpirada />
     <Routes>
       <Route path="/login" element={usuario ? <Navigate to={rutaInicial(usuario.rol)} replace /> : <Login />} />
       <Route
@@ -132,7 +136,16 @@ export default function App() {
           </RutaPrivada>
         }
       />
+      <Route
+        path="/configuracion"
+        element={
+          <RutaPrivada>
+            <Configuracion />
+          </RutaPrivada>
+        }
+      />
       <Route path="*" element={<Navigate to={usuario ? rutaInicial(usuario.rol) : '/login'} replace />} />
     </Routes>
+    </>
   );
 }

@@ -1,6 +1,9 @@
 FROM node:20-alpine AS base
 # El motor de Prisma necesita OpenSSL; node:20-alpine no lo trae instalado.
 RUN apk add --no-cache openssl
+# pg_dump para el botón "Crear respaldo ahora" del panel (Configuración > Respaldos).
+# Misma versión mayor que la base (postgres:16); la 17 también sirve para respaldar una 16.
+RUN apk add --no-cache postgresql16-client || apk add --no-cache postgresql17-client
 WORKDIR /app
 
 COPY package.json package-lock.json* ./

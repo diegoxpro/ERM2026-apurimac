@@ -383,3 +383,37 @@ button.btn svg { width: 16px; height: 16px; }
   .form-grid { grid-template-columns: 1fr; }
   .especiales-grid { grid-template-columns: 1fr; }
 }
+
+/* --- Lector de actas (IA) --- */
+.alerta-revisar {
+  background: #fef3c7; color: #78350f; border: 1px solid #f59e0b; border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px;
+}
+.alerta-revisar strong { font-size: 14px; }
+.alerta-revisar ul { margin: 6px 0 0; padding-left: 18px; }
+.check-revisado { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; margin-right: auto; }
+.check-revisado input { width: 18px; height: 18px; }
+
+/* --- Configuración --- */
+.tabs-config { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px; }
+.tabs-config button {
+  background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 16px; font-size: 14px;
+  font-weight: 600; color: #6b7280; cursor: pointer; margin-bottom: -1px;
+}
+.tabs-config button.activo { color: var(--color-primario); border-bottom-color: var(--color-primario); }
+.config-encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.config-encabezado h3 { margin: 0 0 4px; font-size: 16px; }
+.config-encabezado p { margin: 0; max-width: 560px; font-size: 13px; }
+.interruptor { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
+.interruptor input { width: 18px; height: 18px; }
+.opciones-modelo { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.opcion-modelo {
+  display: flex; gap: 10px; align-items: flex-start; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; cursor: pointer;
+}
+.opcion-modelo.activa { border-color: var(--color-primario); background: #fff5f5; }
+.opcion-modelo input { margin-top: 3px; width: auto; flex: none; }
+.opcion-modelo > div { text-align: left; font-weight: normal; }
+
+/* --- Aviso de sesión expirada (encima de cualquier otro modal) --- */
+.modal-fondo.sesion { z-index: 100; }
+.aviso-sesion { font-size: 13px; line-height: 1.5; background: #fff7e6; border: 1px solid #f5d48a; border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; }

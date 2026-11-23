@@ -1,0 +1,48 @@
+# Producción (Droplet de DigitalOcean): agrega Caddy con HTTPS delante de los
+# frontends y deja de publicar los puertos 1158/1159, para que el único acceso
+# desde internet sea por 80/443 con certificado.
+#
+# Uso (desde la raíz del repo, en el servidor):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Requiere Docker Compose 2.24 o superior (por "!reset").
+#
+# Cadena de proxies: Caddy -> nginx de cada app -> api. Son 2 saltos, que es
+# justo lo que asume `app.set('trust proxy', 2)` en apps/api/src/index.ts.
+
+services:
+  api:
+    environment:
+      BACKUP_DIR: /backups
+    # Los mismos respaldos que crea el cron horario (deploy/backup-db.sh): el
+    # panel los lista, los descarga y puede crear uno al momento.
+    volumes:
+      - /var/backups/erm2026:/backups
+
+  web:
+    ports: !reset []
+
+  personero:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+      - personero
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      PANEL_DOMAIN: ${PANEL_DOMAIN:?Define PANEL_DOMAIN en .env}
+      PERSONERO_DOMAIN: ${PERSONERO_DOMAIN:?Define PERSONERO_DOMAIN en .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

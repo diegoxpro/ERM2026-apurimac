@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './lib/auth';
 import Login from './pages/Login';
+import SesionExpirada from './components/SesionExpirada';
 import Home from './pages/Home';
 import MesaDetalle from './pages/MesaDetalle';
 import CargoFormulario from './pages/CargoFormulario';
@@ -16,6 +17,8 @@ export default function App() {
   const { usuario, cargando } = useAuth();
 
   return (
+    <>
+    <SesionExpirada />
     <Routes>
       <Route path="/login" element={cargando ? <div className="pantalla-carga" /> : usuario ? <Navigate to="/" replace /> : <Login />} />
       <Route
@@ -44,5 +47,6 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

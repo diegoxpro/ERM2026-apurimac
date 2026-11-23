@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ActaSyncInput, ActaSyncResult, CedulaMesaDTO, ColumnaCedulaDTO, ResultadoInput, UsuarioDTO } from '@erm2026/shared';
+import type { ActaSyncInput, ActaSyncResult, CedulaMesaDTO, ColumnaCedulaDTO, LecturaActaDTO, ResultadoInput, UsuarioDTO } from '@erm2026/shared';
 import { ELECCION } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -57,11 +57,19 @@ export default function LlenarActas() {
   const [mesaSeleccionada, setMesaSeleccionada] = useState<MesaFila | null>(null);
   const [cedula, setCedula] = useState<CedulaMesaDTO | null>(null);
   const [columnaActiva, setColumnaActiva] = useState<ColumnaCedulaDTO | null>(null);
-  const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
+  const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error' | 'info'; texto: string } | null>(null);
+  const [lecturaInicial, setLecturaInicial] = useState<{ foto: string; lectura: LecturaActaDTO } | null>(null);
+  const [leyendoFoto, setLeyendoFoto] = useState<string | null>(null);
+  const fotoRef = useRef<HTMLInputElement>(null);
+  // Si el administrador desactivó la lectura con IA (Configuración), se ocultan sus botones.
+  const [lectorDisponible, setLectorDisponible] = useState(false);
 
   useEffect(() => {
     apiFetch<GeoProvincia[]>('/api/locales/geo').then(setGeo).catch(() => {});
     apiFetch<UsuarioDTO[]>('/api/usuarios?rol=PERSONERO&estado=activo').then(setPersoneros).catch(() => {});
+    apiFetch<{ disponible: boolean }>('/api/actas/lector-estado')
+      .then((r) => setLectorDisponible(r.disponible))
+      .catch(() => {});
   }, []);
 
   const distritosDisponibles = geo.find((p) => p.nombre === provinciaFiltro)?.distritos ?? [];
@@ -105,10 +113,56 @@ export default function LlenarActas() {
     setMesaSeleccionada(null);
     setCedula(null);
     setColumnaActiva(null);
+    setLecturaInicial(null);
+  }
+
+  // "Leer acta con foto": la IA lee el número de mesa y los votos, y se abre el
+  // formulario de esa mesa ya prellenado para que el coordinador lo revise.
+  async function leerActaConFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = '';
+    if (!archivo) return;
+    setMensaje(null);
+    try {
+      setLeyendoFoto('Comprimiendo la foto…');
+      const foto = await comprimirImagen(archivo);
+      setLeyendoFoto('Leyendo el acta con IA…');
+      const lectura = await apiFetch<LecturaActaDTO>('/api/actas/leer', { method: 'POST', body: JSON.stringify({ fotoBase64: foto }) });
+      if (!lectura.mesaId || !lectura.mesaCodigo || !lectura.cargo) {
+        setMensaje({
+          tipo: 'error',
+          texto: `No se reconoció la mesa${lectura.mesaCodigoLeido ? ` ${lectura.mesaCodigoLeido}` : ''} en el padrón. Búscala abajo y sube la foto desde su formulario.`,
+        });
+        return;
+      }
+      const filas = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?search=${encodeURIComponent(lectura.mesaCodigo)}&limit=20`);
+      const fila = filas.items.find((m) => m.id === lectura.mesaId);
+      if (!fila) {
+        setMensaje({ tipo: 'error', texto: `La mesa ${lectura.mesaCodigo} no está en tu ámbito.` });
+        return;
+      }
+      const ced = await apiFetch<CedulaMesaDTO>(`/api/mesas/${fila.id}/cedula`);
+      const col = ced.columnas.find((c) => c.cargo === lectura.cargo);
+      setMesaSeleccionada(fila);
+      setCedula(ced);
+      if (!col) return;
+      if (col.estado !== 'SIN_REGISTRAR') {
+        setMensaje({ tipo: 'info', texto: `La mesa ${ced.mesaCodigo} ya tiene registrada el acta de ${tituloCorto(col.cargo)}.` });
+        setColumnaActiva(col);
+        return;
+      }
+      setLecturaInicial({ foto, lectura });
+      setColumnaActiva(col);
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: err instanceof ApiError ? err.message : 'No se pudo leer la foto (¿sin conexión?).' });
+    } finally {
+      setLeyendoFoto(null);
+    }
   }
 
   async function alGuardar(texto: string) {
     setColumnaActiva(null);
+    setLecturaInicial(null);
     setMensaje({ tipo: 'exito', texto });
     if (mesaSeleccionada) await abrirMesa(mesaSeleccionada);
     buscarMesas();
@@ -123,6 +177,12 @@ export default function LlenarActas() {
           <h2>Llenar actas</h2>
           <p>Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).</p>
         </div>
+        {lectorDisponible && (
+          <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
+            <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
+          </button>
+        )}
+        <input ref={fotoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={leerActaConFoto} />
       </div>
 
       {mensaje && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}
@@ -260,7 +320,12 @@ export default function LlenarActas() {
           cedula={cedula}
           columna={columnaActiva}
           personeros={personeros}
-          onCancelar={() => setColumnaActiva(null)}
+          lecturaInicial={lecturaInicial}
+          lectorDisponible={lectorDisponible}
+          onCancelar={() => {
+            setColumnaActiva(null);
+            setLecturaInicial(null);
+          }}
           onGuardado={() => alGuardar(`Acta de ${tituloCorto(columnaActiva.cargo)} de la mesa ${cedula.mesaCodigo} registrada.`)}
         />
       )}
@@ -273,6 +338,8 @@ function FormularioActa({
   cedula,
   columna,
   personeros,
+  lecturaInicial,
+  lectorDisponible,
   onCancelar,
   onGuardado,
 }: {
@@ -280,6 +347,8 @@ function FormularioActa({
   cedula: CedulaMesaDTO;
   columna: ColumnaCedulaDTO;
   personeros: UsuarioDTO[];
+  lecturaInicial: { foto: string; lectura: LecturaActaDTO } | null;
+  lectorDisponible: boolean;
   onCancelar: () => void;
   onGuardado: () => void;
 }) {
@@ -295,31 +364,75 @@ function FormularioActa({
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [totalActa, setTotalActa] = useState('');
+  const [leyendo, setLeyendo] = useState(false);
+  const [leidaPorIA, setLeidaPorIA] = useState(false);
+  const [avisosIA, setAvisosIA] = useState<string[]>([]);
+  const [revisado, setRevisado] = useState(false);
 
   const numero = (s: string) => Math.max(0, parseInt(s, 10) || 0);
   const soloDigitos = (v: string) => v.replace(/\D/g, '').slice(0, 5);
   const validos = useMemo(() => Object.values(votos).reduce((a, b) => a + numero(b), 0), [votos]);
   const totalEmitidos = validos + numero(blanco) + numero(nulo) + numero(impugnado);
   const excede = totalEmitidos > cedula.electoresHabiles;
+  const difiereDelActa = totalActa !== '' && numero(totalActa) !== totalEmitidos;
+  const quedaraObservada = excede || difiereDelActa;
+  const aTexto = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n));
+
+  function aplicarLectura(l: LecturaActaDTO) {
+    const nuevos: Record<string, string> = {};
+    for (const lista of columna.listas) nuevos[lista.id] = aTexto(l.votosPorLista[lista.id]);
+    setVotos(nuevos);
+    setBlanco(aTexto(l.blanco));
+    setNulo(aTexto(l.nulo));
+    setImpugnado(aTexto(l.impugnado));
+    setTotalActa(aTexto(l.totalEmitidos));
+    setAvisosIA(l.avisos);
+    setLeidaPorIA(true);
+    setRevisado(false);
+  }
+
+  useEffect(() => {
+    if (lecturaInicial) {
+      setFoto(lecturaInicial.foto);
+      aplicarLectura(lecturaInicial.lectura);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lecturaInicial]);
 
   async function elegirFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
+    e.target.value = '';
     if (!archivo) return;
     setComprimiendo(true);
+    setError(null);
+    let comprimida: string;
     try {
-      setFoto(await comprimirImagen(archivo));
+      comprimida = await comprimirImagen(archivo);
+      setFoto(comprimida);
     } catch {
       setError('No se pudo leer la imagen seleccionada');
+      return;
     } finally {
       setComprimiendo(false);
+    }
+    if (!lectorDisponible) return;
+    setLeyendo(true);
+    try {
+      const l = await apiFetch<LecturaActaDTO>('/api/actas/leer', {
+        method: 'POST',
+        body: JSON.stringify({ fotoBase64: comprimida, mesaId: cedula.mesaId, cargo: columna.cargo }),
+      });
+      aplicarLectura(l);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'No se pudo leer la foto con IA. Digita los datos a mano.');
+    } finally {
+      setLeyendo(false);
     }
   }
 
   async function guardar() {
     setError(null);
-    if (excede && !confirm(`El total emitido (${totalEmitidos}) supera los ${cedula.electoresHabiles} electores hábiles. ¿Registrar de todos modos?`)) {
-      return;
-    }
     setGuardando(true);
     try {
       const resultados: ResultadoInput[] = [
@@ -337,12 +450,13 @@ function FormularioActa({
         fotoBase64: foto ?? undefined,
         digitadaEn: new Date().toISOString(),
         personeroId: titularId || undefined,
+        totalEmitidosActa: totalActa !== '' ? numero(totalActa) : undefined,
+        leidaPorIA: leidaPorIA || undefined,
       };
       await apiFetch<ActaSyncResult>('/api/actas/sync', { method: 'POST', body: JSON.stringify(input) });
       onGuardado();
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) setError('Este cargo ya tiene un acta registrada para esta mesa.');
-      else setError(e instanceof ApiError ? e.message : 'No se pudo registrar el acta (¿sin conexión?)');
+      setError(e instanceof ApiError ? e.message : 'No se pudo registrar el acta (¿sin conexión?)');
     } finally {
       setGuardando(false);
     }
@@ -366,6 +480,21 @@ function FormularioActa({
         <div className="banner-cargo-admin">{columna.titulo}</div>
 
         {error && <div className="mensaje error">{error}</div>}
+
+        {leyendo && <div className="mensaje info">Leyendo el acta con IA…</div>}
+        {leidaPorIA && (
+          <div className="alerta-revisar">
+            <strong>Revisa los números antes de registrar</strong>
+            <span>La IA llenó el formulario con la foto. Compara cada casilla con la imagen y corrige lo que haga falta.</span>
+            {avisosIA.length > 0 && (
+              <ul>
+                {avisosIA.map((a, i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div className="form-row">
           <label>Registrar a nombre de</label>
@@ -428,6 +557,12 @@ function FormularioActa({
                 </td>
               </tr>
             ))}
+            <tr>
+              <td>Total de votos emitidos (escrito en el acta)</td>
+              <td style={{ textAlign: 'right' }}>
+                <input className="caja-votos-admin" inputMode="numeric" placeholder="—" value={totalActa} onChange={(e) => setTotalActa(soloDigitos(e.target.value))} />
+              </td>
+            </tr>
             <tr className="fila-total-acta">
               <td>
                 <strong>Total</strong> <span className="subtexto">({validos} válidos)</span>
@@ -440,12 +575,20 @@ function FormularioActa({
             </tr>
           </tbody>
         </table>
+        {quedaraObservada && (
+          <div className="mensaje error" style={{ marginTop: 10 }}>
+            {difiereDelActa
+              ? `La suma (${totalEmitidos}) no coincide con el total escrito en el acta (${numero(totalActa)}).`
+              : `La suma (${totalEmitidos}) supera a los ${cedula.electoresHabiles} electores hábiles.`}{' '}
+            Si el acta dice eso, regístrala igual: quedará como OBSERVADA.
+          </div>
+        )}
 
         <div className="form-grid" style={{ marginTop: 14 }}>
           <div className="form-row">
-            <label>Foto del acta física (opcional)</label>
-            <button type="button" className="btn secundario" onClick={() => fileRef.current?.click()} disabled={comprimiendo}>
-              <IconCamera /> {comprimiendo ? 'Comprimiendo…' : foto ? 'Cambiar foto' : 'Subir foto'}
+            <label>{lectorDisponible ? 'Foto del acta física (la IA la lee y llena los votos)' : 'Foto del acta física (opcional)'}</label>
+            <button type="button" className="btn secundario" onClick={() => fileRef.current?.click()} disabled={comprimiendo || leyendo}>
+              <IconCamera /> {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo…' : foto ? 'Cambiar foto' : lectorDisponible ? 'Subir foto y leer con IA' : 'Subir foto'}
             </button>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={elegirFoto} />
             {foto && <img src={foto} alt="Foto del acta" className="previa-foto-admin" />}
@@ -460,8 +603,14 @@ function FormularioActa({
           <button className="btn secundario" onClick={onCancelar}>
             Cancelar
           </button>
-          <button className="btn" onClick={guardar} disabled={guardando || comprimiendo}>
-            {guardando ? 'Registrando…' : 'Registrar acta'}
+          {leidaPorIA && (
+            <label className="check-revisado">
+              <input type="checkbox" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} />
+              Revisé los números con el acta
+            </label>
+          )}
+          <button className="btn" onClick={guardar} disabled={guardando || comprimiendo || leyendo || (leidaPorIA && !revisado)}>
+            {guardando ? 'Registrando…' : quedaraObservada ? 'Registrar como observada' : 'Registrar acta'}
           </button>
         </div>
       </div>

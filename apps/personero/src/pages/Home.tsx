@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { obtenerMesasAsignadas, type MesaResumen } from '../lib/mesas';
 import { useAuth } from '../lib/auth';
 import { IconLogout } from '../components/Icons';
+import LeerActaConFoto from '../components/LeerActaConFoto';
 import MesaDetalle from './MesaDetalle';
 
 export default function Home() {
@@ -32,6 +33,9 @@ export default function Home() {
         <button className="btn secundario" onClick={() => window.location.reload()}>
           Reintentar
         </button>
+        <button className="btn secundario" onClick={logout}>
+          Cerrar sesión
+        </button>
       </div>
     );
   }
@@ -41,6 +45,9 @@ export default function Home() {
       <div className="pantalla-carga">
         <p>Todavía no tienes mesas asignadas.</p>
         <p className="subtexto">Coordina con tu coordinador para que te asigne una mesa.</p>
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <LeerActaConFoto mesasPropias={new Set()} />
+        </div>
         <button className="icon-btn-top" onClick={logout} title="Cerrar sesión">
           <IconLogout />
           <span>Cerrar sesión</span>
@@ -50,7 +57,7 @@ export default function Home() {
   }
 
   if (mesas!.length === 1) {
-    return <MesaDetalle mesaId={mesas![0].id} />;
+    return <MesaDetalle mesaId={mesas![0].id} mesasPropias={new Set([mesas![0].id])} />;
   }
 
   return (
@@ -64,6 +71,7 @@ export default function Home() {
           <IconLogout />
         </button>
       </div>
+      <LeerActaConFoto mesasPropias={new Set(mesas!.map((m) => m.id))} />
       <div className="lista-mesas">
         {mesas!.map((m) => (
           <button key={m.id} className="tarjeta-mesa" onClick={() => navigate(`/mesa/${m.id}`)}>
