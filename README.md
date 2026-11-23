@@ -116,6 +116,30 @@ dominio apuntando al VPS y un reverse proxy con certificado TLS (Nginx Proxy
 Manager, Caddy, o Nginx + certbot) delante del puerto publicado, forzando
 HTTPS y con soporte de WebSockets habilitado (lo usa el dashboard en vivo).
 
+### Landing del dominio raíz (somosperu.lat)
+
+El servicio `landing` (puerto `LANDING_PORT`, por defecto 1160) sirve una
+página estática con el logo, la cuenta regresiva a la elección y accesos a la
+app de personeros (`personeros.somosperu.lat`) y al panel
+(`segundavuelta.somosperu.lat`). Para publicarla:
+
+1. En el DNS, crear registros `A` para `somosperu.lat` y `www` apuntando a la
+   IP del Droplet.
+2. Agregar al `Caddyfile`:
+
+   ```
+   somosperu.lat {
+       reverse_proxy localhost:1160
+   }
+   www.somosperu.lat {
+       redir https://somosperu.lat{uri} permanent
+   }
+   ```
+
+3. `docker compose up -d --build landing` y `systemctl reload caddy`
+   (o `docker compose restart caddy` si Caddy corre en un contenedor; en ese
+   caso usar `landing:80` en lugar de `localhost:1160`).
+
 ## Limitaciones conocidas de este piloto
 
 - Digitación simple, sin doble digitación ni validaciones automáticas de
