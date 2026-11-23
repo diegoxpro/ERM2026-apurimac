@@ -25,12 +25,17 @@ services:
   personero:
     ports: !reset []
 
+  # Landing del dominio raíz: solo se alcanza por Caddy.
+  landing:
+    ports: !reset []
+
   caddy:
     image: caddy:2.8-alpine
     restart: unless-stopped
     depends_on:
       - web
       - personero
+      - landing
     ports:
       - '80:80'
       - '443:443'

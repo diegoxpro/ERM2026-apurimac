@@ -60,5 +60,15 @@ services:
     ports:
       - '${PERSONERO_PORT:-1159}:80'
 
+  # Landing estática del dominio raíz (somosperu.lat): presenta la elección y
+  # enlaza al panel y a la app de personeros. No depende de la API.
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${LANDING_PORT:-1160}:80'
+
 volumes:
   db_data:
