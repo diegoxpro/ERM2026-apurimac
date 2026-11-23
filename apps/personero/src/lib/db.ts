@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { ELECCION, type Cargo, type CedulaMesaDTO, type ResultadoInput } from '@erm2026/shared';
+import { ELECCION, type Cargo, type CedulaMesaDTO, type LecturaActaDTO, type ResultadoInput } from '@erm2026/shared';
 
 export interface ActaLocal {
   clienteId: string;
@@ -10,9 +10,24 @@ export interface ActaLocal {
   observaciones?: string;
   fotoDataUrl?: string; // solo local: la foto del acta física no se sincroniza con el servidor.
   digitadaEn: string;
+  totalEmitidosActa?: number;
+  leidaPorIA?: boolean;
   estado: 'pendiente' | 'sincronizada' | 'error';
   ultimoError?: string;
   actaId?: string;
+}
+
+// Foto tomada sin señal: se guarda aquí y la IA la lee al volver la conexión.
+// Clave = `${mesaId}|${cargo}`, una por cargo de mesa.
+export interface FotoPorLeer {
+  clave: string;
+  mesaId: string;
+  cargo: Cargo;
+  fotoDataUrl: string;
+  tomadaEn: string;
+  estado: 'esperando' | 'leida' | 'error';
+  lectura?: LecturaActaDTO;
+  error?: string;
 }
 
 export interface MesaCache {
@@ -24,12 +39,18 @@ export interface MesaCache {
 class PersoneroDB extends Dexie {
   actas!: Table<ActaLocal, string>;
   mesas!: Table<MesaCache, string>;
+  fotosPorLeer!: Table<FotoPorLeer, string>;
 
   constructor() {
     super(`erm2026_personero_${ELECCION.regionMayus}`);
     this.version(1).stores({
       actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
       mesas: 'mesaId',
+    });
+    this.version(2).stores({
+      actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
+      mesas: 'mesaId',
+      fotosPorLeer: 'clave, estado, mesaId',
     });
   }
 }

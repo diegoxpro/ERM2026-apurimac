@@ -1,44 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, DetalleActaDTO, ResultadoInput } from '@erm2026/shared';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, DetalleActaDTO, LecturaActaDTO, ResultadoInput } from '@erm2026/shared';
 import { db } from '../lib/db';
 import { apiFetch } from '../lib/api';
 import { sincronizarPendientes } from '../lib/sync';
+import { claveFoto, encolarFoto, leerFoto, SinConexionError } from '../lib/lector';
+import { ApiError } from '../lib/api';
+import { comprimirImagen } from '../lib/imagen';
 import { obtenerCedula, tituloCorto, ESTADO_LABEL } from '../lib/mesas';
 import { IconArrowLeft, IconCamera } from '../components/Icons';
-
-// Redimensiona y recomprime la foto en el propio dispositivo antes de enviarla:
-// una foto de cámara sin comprimir puede pesar varios MB, inviable con señal
-// rural intermitente. Con esto queda típicamente en unos cientos de KB.
-async function comprimirImagen(archivo: File): Promise<string> {
-  const dataUrlOriginal: string = await new Promise((resolve, reject) => {
-    const lector = new FileReader();
-    lector.onload = () => resolve(lector.result as string);
-    lector.onerror = reject;
-    lector.readAsDataURL(archivo);
-  });
-
-  const imagen = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = dataUrlOriginal;
-  });
-
-  const MAX_LADO = 1280;
-  const escala = Math.min(1, MAX_LADO / Math.max(imagen.width, imagen.height));
-  const ancho = Math.round(imagen.width * escala);
-  const alto = Math.round(imagen.height * escala);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = ancho;
-  canvas.height = alto;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return dataUrlOriginal;
-  ctx.drawImage(imagen, 0, 0, ancho, alto);
-
-  return canvas.toDataURL('image/jpeg', 0.6);
-}
 
 export default function CargoFormulario() {
   const { mesaId, cargo } = useParams<{ mesaId: string; cargo: Cargo }>();
@@ -199,6 +169,7 @@ function Formulario({
   columna: ColumnaCedulaDTO;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [votos, setVotos] = useState<Record<string, string>>({});
   const [blanco, setBlanco] = useState('');
   const [nulo, setNulo] = useState('');
@@ -207,11 +178,86 @@ function Formulario({
   const [foto, setFoto] = useState<string | null>(null);
   const [comprimiendo, setComprimiendo] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [totalActa, setTotalActa] = useState('');
+  // Lector de actas (IA)
+  const [leyendo, setLeyendo] = useState(false);
+  const [leidaPorIA, setLeidaPorIA] = useState(false);
+  const [avisosIA, setAvisosIA] = useState<string[]>([]);
+  const [mensajeIA, setMensajeIA] = useState<{ tipo: 'info' | 'error'; texto: string } | null>(null);
+  const [revisado, setRevisado] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const numero = (s: string) => Math.max(0, parseInt(s, 10) || 0);
   const validos = useMemo(() => Object.values(votos).reduce((a, b) => a + numero(b), 0), [votos]);
   const totalEmitidos = validos + numero(blanco) + numero(nulo) + numero(impugnado);
+  const noCuadra = (totalActa !== '' && numero(totalActa) !== totalEmitidos) || (electoresHabiles > 0 && totalEmitidos > electoresHabiles);
+
+  const aTexto = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n));
+
+  function aplicarLectura(l: LecturaActaDTO) {
+    const nuevos: Record<string, string> = {};
+    for (const lista of columna.listas) nuevos[lista.id] = aTexto(l.votosPorLista[lista.id]);
+    setVotos(nuevos);
+    setBlanco(aTexto(l.blanco));
+    setNulo(aTexto(l.nulo));
+    setImpugnado(aTexto(l.impugnado));
+    setTotalActa(aTexto(l.totalEmitidos));
+    setAvisosIA(l.avisos);
+    setLeidaPorIA(true);
+    setRevisado(false);
+    setMensajeIA(null);
+  }
+
+  // Al abrir: lectura que llega desde "Leer acta con foto", o una foto que se
+  // tomó sin señal y ya se leyó en segundo plano.
+  useEffect(() => {
+    const estado = location.state as { foto?: string; lectura?: LecturaActaDTO } | null;
+    if (estado?.lectura) {
+      if (estado.foto) setFoto(estado.foto);
+      aplicarLectura(estado.lectura);
+      return;
+    }
+    let activo = true;
+    const clave = claveFoto(mesaId, columna.cargo);
+    async function revisarCola() {
+      const f = await db.fotosPorLeer.get(clave);
+      if (!activo || !f) return;
+      setFoto((actual) => actual ?? f.fotoDataUrl);
+      if (f.estado === 'leida' && f.lectura) {
+        aplicarLectura(f.lectura);
+        activo = false;
+      } else if (f.estado === 'esperando') {
+        setMensajeIA({ tipo: 'info', texto: 'La foto está guardada. La IA la leerá cuando vuelva la señal; también puedes digitar a mano.' });
+      } else if (f.estado === 'error') {
+        setMensajeIA({ tipo: 'error', texto: `${f.error ?? 'No se pudo leer la foto'}. Digita los datos a mano.` });
+        activo = false;
+      }
+    }
+    revisarCola();
+    const t = setInterval(() => activo && revisarCola(), 5000);
+    return () => {
+      activo = false;
+      clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mesaId, columna.cargo]);
+
+  async function leerConIA(fotoDataUrl: string) {
+    setLeyendo(true);
+    setMensajeIA(null);
+    try {
+      aplicarLectura(await leerFoto(fotoDataUrl, mesaId, columna.cargo));
+    } catch (e) {
+      if (e instanceof SinConexionError) {
+        await encolarFoto(mesaId, columna.cargo, fotoDataUrl);
+        setMensajeIA({ tipo: 'info', texto: 'Sin señal: la foto quedó guardada y la IA la leerá al volver la conexión. También puedes digitar a mano.' });
+      } else {
+        setMensajeIA({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudo leer la foto. Digita los datos a mano.' });
+      }
+    } finally {
+      setLeyendo(false);
+    }
+  }
 
   function soloDigitos(valor: string): string {
     return valor.replace(/\D/g, '').slice(0, 5);
@@ -221,11 +267,15 @@ function Formulario({
     const archivo = e.target.files?.[0];
     if (!archivo) return;
     setComprimiendo(true);
+    let comprimida: string;
     try {
-      setFoto(await comprimirImagen(archivo));
+      comprimida = await comprimirImagen(archivo);
+      setFoto(comprimida);
     } finally {
       setComprimiendo(false);
+      e.target.value = '';
     }
+    await leerConIA(comprimida);
   }
 
   async function guardar() {
@@ -247,8 +297,11 @@ function Formulario({
         observaciones: observaciones || undefined,
         fotoDataUrl: foto ?? undefined,
         digitadaEn: new Date().toISOString(),
+        totalEmitidosActa: totalActa !== '' ? numero(totalActa) : undefined,
+        leidaPorIA: leidaPorIA || undefined,
         estado: 'pendiente',
       });
+      await db.fotosPorLeer.delete(claveFoto(mesaId, columna.cargo));
       if (navigator.onLine) await sincronizarPendientes();
       navigate(-1);
     } finally {
@@ -273,6 +326,36 @@ function Formulario({
       <div className="banner-cargo">{columna.titulo}</div>
 
       <div className="contenido-formulario">
+        <button type="button" className="fila-foto fila-foto-ia" onClick={() => fileRef.current?.click()} disabled={comprimiendo || leyendo}>
+          <span className="fila-foto-icono">
+            <IconCamera />
+          </span>
+          <span className="fila-foto-texto">
+            {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo el acta con IA…' : foto ? 'Foto del acta tomada' : 'Tomar foto del acta y leer con IA'}
+          </span>
+          <span className="fila-foto-accion">{foto ? 'Cambiar' : 'Tomar'}</span>
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={elegirFoto} />
+        {foto && !leyendo && !leidaPorIA && navigator.onLine && (
+          <button type="button" className="btn secundario btn-leer-ia" onClick={() => leerConIA(foto)}>
+            Leer esta foto con IA
+          </button>
+        )}
+        {mensajeIA && <div className={`mensaje ${mensajeIA.tipo}`}>{mensajeIA.texto}</div>}
+        {leidaPorIA && (
+          <div className="alerta-revisar">
+            <strong>Revisa los números antes de guardar</strong>
+            <span>La IA llenó el formulario con la foto. Compara cada casilla con el acta física y corrige lo que haga falta.</span>
+            {avisosIA.length > 0 && (
+              <ul>
+                {avisosIA.map((a, i) => (
+                  <li key={i}>{a}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {columna.listas.map((lista) => (
           <div key={lista.id} className="fila-organizacion">
             {lista.simboloUrl ? (
@@ -308,14 +391,19 @@ function Formulario({
           <input className="caja-votos" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="0" value={impugnado} onChange={(e) => setImpugnado(soloDigitos(e.target.value))} />
         </div>
 
-        <button type="button" className="fila-foto" onClick={() => fileRef.current?.click()} disabled={comprimiendo}>
-          <span className="fila-foto-icono">
-            <IconCamera />
-          </span>
-          <span className="fila-foto-texto">{comprimiendo ? 'Comprimiendo…' : foto ? 'Foto tomada' : 'Foto del acta física'}</span>
-          <span className="fila-foto-accion">{foto ? 'Cambiar' : 'Tomar'}</span>
-        </button>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={elegirFoto} />
+        <div className="fila-simple">
+          <label>Total de votos emitidos (según el acta)</label>
+          <input className="caja-votos" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="—" value={totalActa} onChange={(e) => setTotalActa(soloDigitos(e.target.value))} />
+        </div>
+        {noCuadra && (
+          <div className="mensaje error">
+            {totalActa !== '' && numero(totalActa) !== totalEmitidos
+              ? `La suma (${totalEmitidos}) no coincide con el total del acta (${numero(totalActa)}).`
+              : `La suma (${totalEmitidos}) supera a los ${electoresHabiles} electores hábiles.`}{' '}
+            Si el acta física dice eso, guárdala igual: quedará como OBSERVADA para revisión.
+          </div>
+        )}
+
         {foto && <img src={foto} alt="Foto del acta" className="previsualizacion-foto" />}
 
         <textarea
@@ -342,8 +430,14 @@ function Formulario({
             </span>
           </div>
         </div>
-        <button className="btn btn-guardar" onClick={guardar} disabled={guardando || comprimiendo}>
-          {guardando ? 'Guardando…' : 'Guardar acta'}
+        {leidaPorIA && (
+          <label className="check-revisado">
+            <input type="checkbox" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} />
+            Revisé los números con el acta física
+          </label>
+        )}
+        <button className="btn btn-guardar" onClick={guardar} disabled={guardando || comprimiendo || leyendo || (leidaPorIA && !revisado)}>
+          {guardando ? 'Guardando…' : noCuadra ? 'Guardar como observada' : 'Guardar acta'}
         </button>
       </div>
     </div>

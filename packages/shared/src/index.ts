@@ -67,6 +67,33 @@ export interface ActaSyncInput {
   fotoBase64?: string; // foto del acta física, comprimida en el dispositivo antes de enviarse
   digitadaEn: string; // ISO date, hora local del dispositivo al momento de guardar
   personeroId?: string; // solo panel admin: registrar a nombre de un personero
+  // "Total de votos emitidos" escrito en el acta física. Si no coincide con la
+  // suma de los resultados, el servidor deja el acta OBSERVADA.
+  totalEmitidosActa?: number;
+  leidaPorIA?: boolean; // los números vinieron del lector de actas (y la persona los revisó)
+}
+
+// --- Lector de actas por foto (IA) ---
+
+export interface LeerActaInput {
+  fotoBase64: string; // data URL JPEG comprimida en el dispositivo
+  mesaId?: string; // si ya se sabe de qué mesa es (formulario abierto)
+  cargo?: Cargo;
+}
+
+export interface LecturaActaDTO {
+  mesaCodigoLeido: string;
+  mesaId: string | null; // null si el número leído no existe en el padrón
+  mesaCodigo: string | null;
+  cargo: Cargo | null;
+  // listaCandidaturaId -> votos leídos (null = casilla vacía o ilegible)
+  votosPorLista: Record<string, number | null>;
+  blanco: number | null;
+  nulo: number | null;
+  impugnado: number | null;
+  totalEmitidos: number | null;
+  electoresHabilesLeido: number | null;
+  avisos: string[]; // cosas que la persona debe revisar (dudas de la IA, no cuadra, etc.)
 }
 
 export interface ActaSyncResult {

@@ -95,6 +95,8 @@ Valores a completar:
 | `CORS_ORIGIN` | `https://panel.tu-dominio.com` |
 | `VITE_API_URL` | dejar **vacío** |
 | `DNI_API_TOKEN` | opcional |
+| `ANTHROPIC_API_KEY` | clave de Anthropic para el lector de actas por foto (opcional) |
+| `LECTOR_ACTAS_MODELO` | opcional, por defecto `claude-opus-5-5` |
 
 `WEB_PORT` y `PERSONERO_PORT` no se usan en producción (Caddy publica 80/443).
 

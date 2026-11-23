@@ -1,6 +1,7 @@
 import type { ActaSyncResult } from '@erm2026/shared';
 import { apiFetch, ApiError } from './api';
 import { db } from './db';
+import { leerFotosEnCola } from './lector';
 
 let sincronizando = false;
 
@@ -34,6 +35,8 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
             observaciones: acta.observaciones,
             fotoBase64: acta.fotoDataUrl,
             digitadaEn: acta.digitadaEn,
+            totalEmitidosActa: acta.totalEmitidosActa,
+            leidaPorIA: acta.leidaPorIA,
           }),
         });
         await db.actas.update(acta.clienteId, { estado: 'sincronizada', actaId: result.actaId, ultimoError: undefined });
@@ -73,10 +76,12 @@ export async function hayPendientes(): Promise<boolean> {
 export function iniciarSyncAutomatico() {
   window.addEventListener('online', () => {
     sincronizarPendientes();
+    leerFotosEnCola();
   });
   // Reintento periódico por si la conexión es intermitente pero el navegador
   // no dispara el evento "online" de forma confiable (común en zonas rurales).
   setInterval(() => {
     sincronizarPendientes();
+    leerFotosEnCola();
   }, 30_000);
 }
