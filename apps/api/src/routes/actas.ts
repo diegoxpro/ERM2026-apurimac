@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
-import type { ActaResumenDTO, ActaSyncResult, Cargo } from '@erm2026/shared';
+import type { ActaResumenDTO, ActaSyncResult, Cargo, LecturaActaDTO } from '@erm2026/shared';
+import { emparejarOrganizacion, leerActa, LectorError, lectorHabilitado } from '../lib/lectorActas';
 import type { Server as SocketIOServer } from 'socket.io';
 
 const resultadoSchema = z.object({
@@ -21,11 +22,147 @@ const syncSchema = z.object({
   digitadaEn: z.string(),
   // Solo ADMIN/COORDINADOR: registrar el acta a nombre de un personero (p.ej. la dictó por teléfono).
   personeroId: z.string().optional(),
+  totalEmitidosActa: z.number().int().min(0).optional(),
+  leidaPorIA: z.boolean().optional(),
 });
+
+const CARGOS = ['GOBERNADOR_REGIONAL', 'CONSEJERO_REGIONAL', 'ALCALDE_PROVINCIAL', 'ALCALDE_DISTRITAL'] as const;
+
+const leerSchema = z.object({
+  fotoBase64: z.string().min(100),
+  mesaId: z.string().optional(),
+  cargo: z.enum(CARGOS).optional(),
+});
+
+// Reglas de cuadre del acta: si algo no cuadra, el acta se guarda igual pero
+// queda OBSERVADA para que un coordinador/administrador la revise.
+export function problemasDeCuadre(sumaVotos: number, totalEmitidosActa: number | undefined, electoresHabiles: number): string[] {
+  const problemas: string[] = [];
+  if (totalEmitidosActa !== undefined && totalEmitidosActa !== sumaVotos) {
+    problemas.push(`La suma de votos (${sumaVotos}) no coincide con el total emitido escrito en el acta (${totalEmitidosActa})`);
+  }
+  if (electoresHabiles > 0 && sumaVotos > electoresHabiles) {
+    problemas.push(`La suma de votos (${sumaVotos}) supera a los electores hábiles (${electoresHabiles})`);
+  }
+  return problemas;
+}
+
+// Busca la mesa por el número leído en la foto, tolerando ceros a la izquierda.
+async function buscarMesaPorCodigo(codigo: string) {
+  const limpio = codigo.replace(/\D/g, '');
+  if (!limpio) return null;
+  const candidatos = [...new Set([limpio, limpio.padStart(6, '0'), limpio.replace(/^0+/, '')])].filter(Boolean);
+  return prisma.mesa.findFirst({
+    where: { codigo: { in: candidatos } },
+    include: { localVotacion: { include: { distrito: { include: { provincia: true } } } } },
+  });
+}
 
 export function buildActasRouter(io: SocketIOServer) {
   const router = Router();
   router.use(requiereAuth);
+
+  // Lector de actas: devuelve lo que la IA leyó en la foto. No guarda nada.
+  router.post('/leer', async (req, res) => {
+    if (!lectorHabilitado()) {
+      return res.status(503).json({ error: 'El lector de actas no está configurado en el servidor. Digita los datos a mano.' });
+    }
+    const parsed = leerSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Foto inválida' });
+    const input = parsed.data;
+
+    let lectura;
+    try {
+      lectura = await leerActa(input.fotoBase64);
+    } catch (e) {
+      console.error('[lector] error', e);
+      const msg = e instanceof LectorError ? e.message : 'No se pudo leer la foto en este momento. Intenta de nuevo o digita a mano.';
+      return res.status(502).json({ error: msg });
+    }
+
+    const avisos: string[] = [];
+    if (!lectura.es_acta) avisos.push('La IA no reconoce esta imagen como un acta legible. Revisa todos los datos.');
+    avisos.push(...lectura.dudas);
+
+    // Mesa: la leída en la foto; si el formulario ya tenía una mesa y no coincide, se avisa.
+    const mesaLeida = await buscarMesaPorCodigo(lectura.mesa_codigo);
+    let mesa = mesaLeida;
+    if (input.mesaId) {
+      const abierta = await prisma.mesa.findUnique({
+        where: { id: input.mesaId },
+        include: { localVotacion: { include: { distrito: { include: { provincia: true } } } } },
+      });
+      if (abierta && mesaLeida && abierta.id !== mesaLeida.id) {
+        avisos.push(`La foto parece ser de la mesa ${mesaLeida.codigo}, no de la mesa ${abierta.codigo}. Verifica que sea el acta correcta.`);
+      }
+      mesa = abierta ?? mesaLeida;
+    }
+    if (!mesa) {
+      avisos.push(
+        lectura.mesa_codigo
+          ? `La mesa ${lectura.mesa_codigo} leída en la foto no existe en el padrón.`
+          : 'No se pudo leer el número de mesa en la foto.',
+      );
+    } else if (req.usuario!.rol === 'PERSONERO' && mesa.personeroId !== req.usuario!.sub) {
+      avisos.push(`La mesa ${mesa.codigo} no está asignada a ti; no podrás enviar esta acta.`);
+    }
+
+    // Cargo: el indicado, o el primero que tenga listas (en segunda vuelta solo hay Gobernador).
+    let cargo: Cargo | null = input.cargo ?? null;
+    if (!cargo) {
+      const conListas = await prisma.listaCandidatura.findMany({ select: { cargo: true }, distinct: ['cargo'] });
+      const set = new Set(conListas.map((c) => c.cargo));
+      cargo = CARGOS.find((c) => set.has(c)) ?? null;
+    }
+
+    const votosPorLista: Record<string, number | null> = {};
+    if (mesa && cargo) {
+      const d = mesa.localVotacion.distrito;
+      const where: any = { cargo, provinciaNombre: '', distritoNombre: '' };
+      if (cargo === 'CONSEJERO_REGIONAL' || cargo === 'ALCALDE_PROVINCIAL') where.provinciaNombre = d.provincia.nombre;
+      if (cargo === 'ALCALDE_DISTRITAL') {
+        where.provinciaNombre = d.provincia.nombre;
+        where.distritoNombre = d.nombre;
+      }
+      const listas = (await prisma.listaCandidatura.findMany({ where, include: { organizacion: true } })).map((l) => ({
+        id: l.id,
+        organizacion: l.organizacion.nombre,
+      }));
+      for (const fila of lectura.organizaciones) {
+        const lista = emparejarOrganizacion(fila.nombre, listas);
+        if (lista) votosPorLista[lista.id] = fila.votos;
+        else avisos.push(`La organización "${fila.nombre}" leída en la foto no está en la cédula de esta mesa.`);
+      }
+      for (const l of listas) {
+        if (!(l.id in votosPorLista)) avisos.push(`No se leyeron votos para ${l.organizacion}.`);
+      }
+
+      const suma =
+        Object.values(votosPorLista).reduce<number>((a, b) => a + (b ?? 0), 0) +
+        (lectura.votos_blanco ?? 0) +
+        (lectura.votos_nulos ?? 0) +
+        (lectura.votos_impugnados ?? 0);
+      avisos.push(...problemasDeCuadre(suma, lectura.total_emitidos ?? undefined, mesa.electores));
+      if (lectura.electores_habiles != null && mesa.electores > 0 && lectura.electores_habiles !== mesa.electores) {
+        avisos.push(`El acta dice ${lectura.electores_habiles} electores hábiles y el padrón ${mesa.electores}.`);
+      }
+    }
+
+    const dto: LecturaActaDTO = {
+      mesaCodigoLeido: lectura.mesa_codigo,
+      mesaId: mesa?.id ?? null,
+      mesaCodigo: mesa?.codigo ?? null,
+      cargo,
+      votosPorLista,
+      blanco: lectura.votos_blanco,
+      nulo: lectura.votos_nulos,
+      impugnado: lectura.votos_impugnados,
+      totalEmitidos: lectura.total_emitidos,
+      electoresHabilesLeido: lectura.electores_habiles,
+      avisos,
+    };
+    res.json(dto);
+  });
 
   router.post('/sync', async (req, res) => {
     const parsed = syncSchema.safeParse(req.body);
@@ -69,14 +206,22 @@ export function buildActasRouter(io: SocketIOServer) {
         .json({ error: 'Este cargo ya tiene un acta registrada para esta mesa', actaId: yaRegistrada.id, estado: yaRegistrada.estado });
     }
 
+    const sumaVotos = input.resultados.reduce((a, r) => a + r.votos, 0);
+    const problemas = problemasDeCuadre(sumaVotos, input.totalEmitidosActa, mesa.electores);
+    const notas = [
+      input.leidaPorIA ? '[Leída con IA y revisada]' : null,
+      ...problemas.map((p) => `[Observada automáticamente] ${p}.`),
+      input.observaciones?.trim() || null,
+    ].filter(Boolean);
+
     const acta = await prisma.acta.create({
       data: {
         clienteId: input.clienteId,
         mesaId: input.mesaId,
         cargo: input.cargo,
         personeroId,
-        estado: 'ENVIADA',
-        observaciones: input.observaciones,
+        estado: problemas.length > 0 ? 'OBSERVADA' : 'ENVIADA',
+        observaciones: notas.length > 0 ? notas.join('\n') : null,
         fotoBase64: input.fotoBase64,
         digitadaEn: new Date(input.digitadaEn),
         resultados: {

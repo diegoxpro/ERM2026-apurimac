@@ -298,3 +298,15 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .icono-paso svg { width: 16px; height: 16px; }
 
 .nota-instalar { font-size: 12.5px; color: #6b7280; background: #f4f6fa; border-radius: 8px; padding: 10px 12px; }
+
+/* --- Lector de actas (IA) --- */
+.fila-foto-ia { border: 1.5px dashed var(--color-primario); margin-top: 0; }
+.btn-leer-ia { width: 100%; margin-bottom: 10px; }
+.alerta-revisar {
+  background: #fef3c7; color: #78350f; border: 1px solid #f59e0b; border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 14px; font-size: 13px; display: flex; flex-direction: column; gap: 4px;
+}
+.alerta-revisar strong { font-size: 14px; }
+.alerta-revisar ul { margin: 6px 0 0; padding-left: 18px; }
+.check-revisado { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 10px; }
+.check-revisado input { width: 20px; height: 20px; }

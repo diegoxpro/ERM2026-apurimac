@@ -27,6 +27,8 @@ app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN }));
 // La carga masiva sube el Excel en base64: límite mayor solo en esa ruta.
 app.use('/api/usuarios/importar', express.json({ limit: '10mb' }));
+// Las actas llevan la foto del acta física (JPEG comprimido, unos cientos de KB).
+app.use('/api/actas', express.json({ limit: '5mb' }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
