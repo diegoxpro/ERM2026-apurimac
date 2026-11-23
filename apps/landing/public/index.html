@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Somos Perú · Lambayeque</title>
+  <meta name="description" content="Portal del equipo de Somos Perú para la segunda vuelta regional de Lambayeque, 6 de diciembre de 2026." />
+  <meta name="theme-color" content="#1D428A" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta property="og:title" content="Somos Perú · Segunda vuelta Lambayeque" />
+  <meta property="og:description" content="Escrutinio y control electoral del 6 de diciembre de 2026." />
+  <meta property="og:image" content="/logo-somos-peru.png" />
+  <style>
+    :root {
+      --azul: #1D428A;
+      --azul-osc: #142f63;
+      --rojo: #ED1C24;
+      --fondo: #f5f7fb;
+      --texto: #1a2233;
+      --suave: #5b6478;
+      --tarjeta: #ffffff;
+      --borde: #e3e7ef;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--texto);
+      background: var(--fondo);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .franja { height: 6px; background: linear-gradient(90deg, var(--rojo) 0 50%, var(--azul) 50% 100%); }
+    header.hero {
+      background: var(--azul);
+      color: #fff;
+      padding: 48px 16px 88px;
+      text-align: center;
+    }
+    .hero img {
+      width: 132px; height: auto;
+      background: #fff; border-radius: 24px; padding: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .hero .eyebrow {
+      margin: 24px 0 6px; font-size: .8rem; letter-spacing: .12em;
+      text-transform: uppercase; opacity: .8; font-weight: 600;
+    }
+    .hero h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.6rem); line-height: 1.15; }
+    .hero p.sub { margin: 12px auto 0; max-width: 34rem; opacity: .9; font-size: 1.05rem; }
+    .cuenta {
+      display: inline-flex; gap: 10px; margin-top: 28px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 14px; padding: 12px 18px; align-items: baseline;
+    }
+    .cuenta strong { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+    .cuenta span { opacity: .85; }
+    main {
+      flex: 1; width: 100%; max-width: 880px; margin: -56px auto 0; padding: 0 16px 48px;
+    }
+    .accesos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .accesos { grid-template-columns: 1fr; } }
+    a.acceso {
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px;
+      padding: 24px; text-decoration: none; color: inherit;
+      box-shadow: 0 4px 16px rgba(20,47,99,.08);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    a.acceso:hover, a.acceso:focus-visible {
+      transform: translateY(-2px); border-color: var(--azul);
+      box-shadow: 0 10px 28px rgba(20,47,99,.14); outline: none;
+    }
+    .icono {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: grid; place-items: center; color: #fff;
+    }
+    .icono svg { width: 26px; height: 26px; }
+    .acceso.panel .icono { background: var(--azul); }
+    .acceso.personeros .icono { background: var(--rojo); }
+    .acceso h2 { margin: 4px 0 0; font-size: 1.25rem; }
+    .acceso p { margin: 0; color: var(--suave); line-height: 1.5; }
+    .acceso .ir { margin-top: auto; padding-top: 8px; font-weight: 600; color: var(--azul); }
+    .acceso.personeros .ir { color: var(--rojo); }
+    .nota {
+      margin-top: 28px; background: var(--tarjeta); border: 1px solid var(--borde);
+      border-radius: 16px; padding: 20px 24px; color: var(--suave); line-height: 1.6;
+    }
+    .nota h3 { margin: 0 0 6px; color: var(--texto); font-size: 1rem; }
+    footer { text-align: center; color: var(--suave); font-size: .85rem; padding: 0 16px 28px; }
+  </style>
+</head>
+<body>
+  <div class="franja" aria-hidden="true"></div>
+  <header class="hero">
+    <img src="/logo-somos-peru.png" alt="Partido Democrático Somos Perú" width="132" height="113" />
+    <p class="eyebrow">Elecciones Regionales 2026 · Segunda vuelta</p>
+    <h1>Lambayeque, 6 de diciembre</h1>
+    <p class="sub">Portal del equipo de Somos Perú para el control y escrutinio de actas en toda la región.</p>
+    <div class="cuenta" id="cuenta" aria-live="polite">
+      <strong id="cuenta-num">—</strong><span id="cuenta-txt">días para la elección</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="accesos" aria-label="Accesos">
+      <a class="acceso personeros" href="https://personeros.somosperu.lat">
+        <div class="icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg>
+        </div>
+        <h2>App de personeros</h2>
+        <p>Para personeros de mesa. Ingresa con tu DNI y registra los resultados de tu mesa desde el celular.</p>
+        <span class="ir">Ingresar como personero →</span>
+      </a>
+      <a class="acceso panel" href="https://segundavuelta.somosperu.lat">
+        <div class="icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+        </div>
+        <h2>Panel de administrativos</h2>
+        <p>Para coordinadores y administradores. Seguimiento de actas, validación y resultados en tiempo real.</p>
+        <span class="ir">Ir al panel →</span>
+      </a>
+    </section>
+
+    <section class="nota">
+      <h3>¿Eres personero y no puedes ingresar?</h3>
+      Comunícate con tu coordinador de distrito para que verifique que tu DNI esté registrado. Instala la app en tu celular desde el navegador (“Agregar a pantalla de inicio”) para tenerla a mano el día de la elección.
+    </section>
+  </main>
+
+  <footer>Partido Democrático Somos Perú · Lambayeque 2026</footer>
+
+  <script>
+    (function () {
+      // Medianoche del 6 de diciembre de 2026, hora de Lima (UTC-5).
+      var eleccion = new Date('2026-12-06T00:00:00-05:00');
+      var finJornada = new Date('2026-12-07T00:00:00-05:00');
+      var num = document.getElementById('cuenta-num');
+      var txt = document.getElementById('cuenta-txt');
+      var ahora = new Date();
+      if (ahora >= finJornada) {
+        document.getElementById('cuenta').hidden = true;
+      } else if (ahora >= eleccion) {
+        num.textContent = 'Hoy';
+        txt.textContent = 'es el día de la elección';
+      } else {
+        var dias = Math.ceil((eleccion - ahora) / 86400000);
+        num.textContent = dias;
+        txt.textContent = dias === 1 ? 'día para la elección' : 'días para la elección';
+      }
+    })();
+  </script>
+</body>
+</html>
