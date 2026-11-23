@@ -56,7 +56,7 @@ export default function Home() {
     );
   }
 
-  if (mesas!.length === 1) {
+  if (mesas!.length === 1 && mesas![0].asignada !== false) {
     return <MesaDetalle mesaId={mesas![0].id} mesasPropias={new Set([mesas![0].id])} />;
   }
 
@@ -71,12 +71,15 @@ export default function Home() {
           <IconLogout />
         </button>
       </div>
-      <LeerActaConFoto mesasPropias={new Set(mesas!.map((m) => m.id))} />
+      <LeerActaConFoto mesasPropias={new Set(mesas!.filter((m) => m.asignada !== false).map((m) => m.id))} />
       <div className="lista-mesas">
         {mesas!.map((m) => (
-          <button key={m.id} className="tarjeta-mesa" onClick={() => navigate(`/mesa/${m.id}`)}>
+          <button key={m.id} className="tarjeta-mesa" onClick={() => navigate(`/mesa/${m.id}`, { state: { noAsignada: m.asignada === false } })}>
             <div className="tarjeta-mesa-info">
-              <strong>Mesa {m.codigo}</strong>
+              <strong>
+                Mesa {m.codigo}
+                {m.asignada === false && <span className="etiqueta-no-asignada">No asignada</span>}
+              </strong>
               <span>
                 {m.localVotacion} · {m.distrito}
               </span>
