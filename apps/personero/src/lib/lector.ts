@@ -1,5 +1,5 @@
 import type { Cargo, LecturaActaDTO } from '@erm2026/shared';
-import { apiFetch, ApiError } from './api';
+import { apiFetch, ApiError, SesionExpiradaError } from './api';
 import { db } from './db';
 
 // Lector de actas: envía la foto al servidor, que la lee con IA y devuelve los
@@ -64,7 +64,8 @@ export async function leerFotosEnCola(): Promise<number> {
         await db.fotosPorLeer.update(f.clave, { estado: 'leida', lectura, error: undefined });
         leidas++;
       } catch (e) {
-        if (e instanceof SinConexionError) break;
+        // Sin señal o sesión vencida: la foto sigue esperando y se leerá después.
+        if (e instanceof SinConexionError || e instanceof SesionExpiradaError) break;
         await db.fotosPorLeer.update(f.clave, { estado: 'error', error: e instanceof Error ? e.message : 'Error' });
       }
     }

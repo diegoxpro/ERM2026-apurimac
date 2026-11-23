@@ -1,5 +1,5 @@
 import type { ActaSyncResult } from '@erm2026/shared';
-import { apiFetch, ApiError } from './api';
+import { apiFetch, ApiError, SesionExpiradaError } from './api';
 import { db } from './db';
 import { leerFotosEnCola } from './lector';
 
@@ -42,6 +42,9 @@ export async function sincronizarPendientes(): Promise<{ enviadas: number; falli
         await db.actas.update(acta.clienteId, { estado: 'sincronizada', actaId: result.actaId, ultimoError: undefined });
         enviadas++;
       } catch (e) {
+        // Sesión vencida: el acta sigue pendiente en este dispositivo (no se marca
+        // como error ni se borra) y se enviará cuando la persona vuelva a ingresar.
+        if (e instanceof SesionExpiradaError) break;
         // Un 409 significa que ese cargo de esa mesa YA tiene acta registrada
         // (p.ej. quedó una copia local duplicada por un doble toque en "Guardar").
         // El servidor ya tiene el dato: lo tratamos como sincronizado, no como error,

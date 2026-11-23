@@ -35,6 +35,9 @@ export default function Home() {
         <button className="btn secundario" onClick={() => window.location.reload()}>
           Reintentar
         </button>
+        <button className="btn secundario" onClick={logout}>
+          Cerrar sesión
+        </button>
       </div>
     );
   }
