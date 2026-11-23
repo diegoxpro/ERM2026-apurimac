@@ -11,6 +11,14 @@
 # justo lo que asume `app.set('trust proxy', 2)` en apps/api/src/index.ts.
 
 services:
+  api:
+    environment:
+      BACKUP_DIR: /backups
+    # Los mismos respaldos que crea el cron horario (deploy/backup-db.sh): el
+    # panel los lista, los descarga y puede crear uno al momento.
+    volumes:
+      - /var/backups/erm2026:/backups
+
   web:
     ports: !reset []
 

@@ -61,10 +61,15 @@ export default function LlenarActas() {
   const [lecturaInicial, setLecturaInicial] = useState<{ foto: string; lectura: LecturaActaDTO } | null>(null);
   const [leyendoFoto, setLeyendoFoto] = useState<string | null>(null);
   const fotoRef = useRef<HTMLInputElement>(null);
+  // Si el administrador desactivó la lectura con IA (Configuración), se ocultan sus botones.
+  const [lectorDisponible, setLectorDisponible] = useState(false);
 
   useEffect(() => {
     apiFetch<GeoProvincia[]>('/api/locales/geo').then(setGeo).catch(() => {});
     apiFetch<UsuarioDTO[]>('/api/usuarios?rol=PERSONERO&estado=activo').then(setPersoneros).catch(() => {});
+    apiFetch<{ disponible: boolean }>('/api/actas/lector-estado')
+      .then((r) => setLectorDisponible(r.disponible))
+      .catch(() => {});
   }, []);
 
   const distritosDisponibles = geo.find((p) => p.nombre === provinciaFiltro)?.distritos ?? [];
@@ -172,9 +177,11 @@ export default function LlenarActas() {
           <h2>Llenar actas</h2>
           <p>Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).</p>
         </div>
-        <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
-          <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
-        </button>
+        {lectorDisponible && (
+          <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
+            <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
+          </button>
+        )}
         <input ref={fotoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={leerActaConFoto} />
       </div>
 
@@ -314,6 +321,7 @@ export default function LlenarActas() {
           columna={columnaActiva}
           personeros={personeros}
           lecturaInicial={lecturaInicial}
+          lectorDisponible={lectorDisponible}
           onCancelar={() => {
             setColumnaActiva(null);
             setLecturaInicial(null);
@@ -331,6 +339,7 @@ function FormularioActa({
   columna,
   personeros,
   lecturaInicial,
+  lectorDisponible,
   onCancelar,
   onGuardado,
 }: {
@@ -339,6 +348,7 @@ function FormularioActa({
   columna: ColumnaCedulaDTO;
   personeros: UsuarioDTO[];
   lecturaInicial: { foto: string; lectura: LecturaActaDTO } | null;
+  lectorDisponible: boolean;
   onCancelar: () => void;
   onGuardado: () => void;
 }) {
@@ -406,6 +416,7 @@ function FormularioActa({
     } finally {
       setComprimiendo(false);
     }
+    if (!lectorDisponible) return;
     setLeyendo(true);
     try {
       const l = await apiFetch<LecturaActaDTO>('/api/actas/leer', {
@@ -576,9 +587,9 @@ function FormularioActa({
 
         <div className="form-grid" style={{ marginTop: 14 }}>
           <div className="form-row">
-            <label>Foto del acta física (la IA la lee y llena los votos)</label>
+            <label>{lectorDisponible ? 'Foto del acta física (la IA la lee y llena los votos)' : 'Foto del acta física (opcional)'}</label>
             <button type="button" className="btn secundario" onClick={() => fileRef.current?.click()} disabled={comprimiendo || leyendo}>
-              <IconCamera /> {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo…' : foto ? 'Cambiar foto' : 'Subir foto y leer con IA'}
+              <IconCamera /> {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo…' : foto ? 'Cambiar foto' : lectorDisponible ? 'Subir foto y leer con IA' : 'Subir foto'}
             </button>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={elegirFoto} />
             {foto && <img src={foto} alt="Foto del acta" className="previa-foto-admin" />}

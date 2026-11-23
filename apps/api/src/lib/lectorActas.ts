@@ -1,15 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import * as z from 'zod/v4';
+import { obtenerConfigLector } from './configuracion';
 
 // Lector de actas: recibe la foto del acta física y devuelve los números
 // escritos a mano, usando la IA de visión de Claude. El resultado NUNCA se
 // guarda directamente: vuelve al formulario para que la persona lo revise.
 
-export const MODELO_LECTOR = process.env.LECTOR_ACTAS_MODELO || 'claude-opus-5-5';
-
-export function lectorHabilitado(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+// Motivo por el que el lector no se puede usar, o null si está listo.
+export async function motivoLectorNoDisponible(): Promise<string | null> {
+  const cfg = await obtenerConfigLector();
+  if (!cfg.activo) return 'La lectura con IA está desactivada. Digita los datos a mano.';
+  if (!cfg.apiKey) return 'La lectura con IA no tiene una clave de Anthropic configurada. Digita los datos a mano.';
+  return null;
 }
 
 const LecturaSchema = z.object({
@@ -43,7 +46,12 @@ Transcribe exactamente lo que está escrito; no corrijas ni completes cifras par
 - Si un dígito es ambiguo (1/7, 4/9, 5/6, 0/6), elige la lectura más probable y anótalo en "dudas".
 - Si la imagen no es un acta o es ilegible, es_acta = false.`;
 
-let cliente: Anthropic | null = null;
+let cliente: { apiKey: string; c: Anthropic } | null = null;
+
+export function clienteAnthropic(apiKey: string): Anthropic {
+  if (!cliente || cliente.apiKey !== apiKey) cliente = { apiKey, c: new Anthropic({ apiKey, timeout: 60_000, maxRetries: 2 }) };
+  return cliente.c;
+}
 
 export class LectorError extends Error {}
 
@@ -52,10 +60,11 @@ export async function leerActa(fotoDataUrl: string): Promise<LecturaActa> {
   if (!m) throw new LectorError('La foto no tiene un formato válido');
   const mediaType = m[1] as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
 
-  cliente ??= new Anthropic({ timeout: 60_000, maxRetries: 2 });
+  const cfg = await obtenerConfigLector();
+  if (!cfg.apiKey) throw new LectorError('La lectura con IA no tiene una clave de Anthropic configurada.');
 
-  const respuesta = await cliente.messages.parse({
-    model: MODELO_LECTOR,
+  const respuesta = await clienteAnthropic(cfg.apiKey).messages.parse({
+    model: cfg.modelo,
     max_tokens: 4000,
     output_config: { effort: 'low', format: zodOutputFormat(LecturaSchema) },
     system: INSTRUCCIONES,
@@ -74,7 +83,7 @@ export async function leerActa(fotoDataUrl: string): Promise<LecturaActa> {
     throw new LectorError('La IA no pudo leer esta foto. Digita los datos a mano.');
   }
   console.log(
-    `[lector] ${MODELO_LECTOR} entrada=${respuesta.usage.input_tokens} salida=${respuesta.usage.output_tokens} tokens`,
+    `[lector] ${cfg.modelo} entrada=${respuesta.usage.input_tokens} salida=${respuesta.usage.output_tokens} tokens`,
   );
   return respuesta.parsed_output;
 }

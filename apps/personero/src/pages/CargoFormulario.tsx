@@ -4,7 +4,7 @@ import type { Cargo, CedulaMesaDTO, ColumnaCedulaDTO, DetalleActaDTO, LecturaAct
 import { db } from '../lib/db';
 import { apiFetch } from '../lib/api';
 import { sincronizarPendientes } from '../lib/sync';
-import { claveFoto, encolarFoto, leerFoto, SinConexionError } from '../lib/lector';
+import { claveFoto, encolarFoto, leerFoto, lectorDisponible, SinConexionError } from '../lib/lector';
 import { ApiError } from '../lib/api';
 import { comprimirImagen } from '../lib/imagen';
 import { obtenerCedula, tituloCorto, ESTADO_LABEL } from '../lib/mesas';
@@ -185,6 +185,7 @@ function Formulario({
   const [avisosIA, setAvisosIA] = useState<string[]>([]);
   const [mensajeIA, setMensajeIA] = useState<{ tipo: 'info' | 'error'; texto: string } | null>(null);
   const [revisado, setRevisado] = useState(false);
+  const [conIA, setConIA] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const numero = (s: string) => Math.max(0, parseInt(s, 10) || 0);
@@ -207,6 +208,10 @@ function Formulario({
     setRevisado(false);
     setMensajeIA(null);
   }
+
+  useEffect(() => {
+    lectorDisponible().then(setConIA);
+  }, []);
 
   // Al abrir: lectura que llega desde "Leer acta con foto", o una foto que se
   // tomó sin señal y ya se leyó en segundo plano.
@@ -275,7 +280,7 @@ function Formulario({
       setComprimiendo(false);
       e.target.value = '';
     }
-    await leerConIA(comprimida);
+    if (conIA) await leerConIA(comprimida);
   }
 
   async function guardar() {
@@ -331,12 +336,12 @@ function Formulario({
             <IconCamera />
           </span>
           <span className="fila-foto-texto">
-            {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo el acta con IA…' : foto ? 'Foto del acta tomada' : 'Tomar foto del acta y leer con IA'}
+            {comprimiendo ? 'Comprimiendo…' : leyendo ? 'Leyendo el acta con IA…' : foto ? 'Foto del acta tomada' : conIA ? 'Tomar foto del acta y leer con IA' : 'Foto del acta física'}
           </span>
           <span className="fila-foto-accion">{foto ? 'Cambiar' : 'Tomar'}</span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={elegirFoto} />
-        {foto && !leyendo && !leidaPorIA && navigator.onLine && (
+        {conIA && foto && !leyendo && !leidaPorIA && navigator.onLine && (
           <button type="button" className="btn secundario btn-leer-ia" onClick={() => leerConIA(foto)}>
             Leer esta foto con IA
           </button>

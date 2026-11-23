@@ -73,6 +73,29 @@ export interface ActaSyncInput {
   leidaPorIA?: boolean; // los números vinieron del lector de actas (y la persona los revisó)
 }
 
+// --- Configuración (solo administrador) ---
+
+export interface ModeloLectorDTO {
+  id: string;
+  nombre: string;
+  detalle: string;
+}
+
+export interface ConfigLectorDTO {
+  activo: boolean;
+  modelo: string;
+  modelos: ModeloLectorDTO[];
+  tieneApiKey: boolean;
+  apiKeyFinal: string | null; // últimos 4 caracteres, para reconocerla sin mostrarla
+  origenClave: 'panel' | 'servidor' | null;
+}
+
+export interface BackupDTO {
+  nombre: string;
+  bytes: number;
+  creadoEn: string;
+}
+
 // --- Lector de actas por foto (IA) ---
 
 export interface LeerActaInput {

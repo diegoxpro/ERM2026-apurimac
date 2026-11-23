@@ -1,13 +1,15 @@
 // Prueba el lector de actas con fotos locales, sin pasar por la app.
+// Necesita DATABASE_URL (lee la configuración guardada en el panel).
 // Uso: ANTHROPIC_API_KEY=... npx tsx scripts/probar-lector.ts foto1.png foto2.jpg
 import { readFileSync } from 'fs';
 import { extname } from 'path';
-import { leerActa, MODELO_LECTOR } from '../src/lib/lectorActas';
+import { leerActa } from '../src/lib/lectorActas';
+import { obtenerConfigLector } from '../src/lib/configuracion';
 
 async function main() {
   const archivos = process.argv.slice(2);
   if (archivos.length === 0) throw new Error('Indica al menos una foto');
-  console.log(`Modelo: ${MODELO_LECTOR}`);
+  console.log(`Modelo: ${(await obtenerConfigLector()).modelo}`);
   for (const archivo of archivos) {
     const tipo = extname(archivo).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
     const dataUrl = `data:${tipo};base64,${readFileSync(archivo).toString('base64')}`;
