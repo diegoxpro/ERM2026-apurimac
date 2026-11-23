@@ -24,3 +24,18 @@
 	}
 	reverse_proxy personero:80
 }
+
+# Landing estática del dominio raíz (apps/landing). LANDING_DOMAIN es opcional
+# en .env; por defecto somosperu.lat.
+{$LANDING_DOMAIN:somosperu.lat} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy landing:80
+}
+
+www.{$LANDING_DOMAIN:somosperu.lat} {
+	redir https://{$LANDING_DOMAIN:somosperu.lat}{uri} permanent
+}
