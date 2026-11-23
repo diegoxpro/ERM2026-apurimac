@@ -19,7 +19,11 @@ mesasRouter.get('/', async (req, res) => {
   const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
 
   const where: any = {};
-  if (soloPropias) where.personeroId = req.usuario!.sub;
+  // "Mis mesas" del personero: las asignadas y también las que no le asignaron
+  // pero de las que él mismo envió un acta (p.ej. cubrió a un compañero).
+  if (soloPropias) {
+    where.AND = [{ OR: [{ personeroId: req.usuario!.sub }, { actas: { some: { personeroId: req.usuario!.sub } } }] }];
+  }
   if (search) {
     where.OR = [
       { codigo: { contains: search } },
@@ -65,6 +69,7 @@ mesasRouter.get('/', async (req, res) => {
         provincia: m.localVotacion.distrito.provincia.nombre,
         personeroId: m.personeroId,
         personeroNombre: m.personero?.nombre ?? null,
+        asignada: m.personeroId === req.usuario!.sub,
         actasRegistradas: m.actas.length,
         actasEsperadas: totalCargos,
       };
