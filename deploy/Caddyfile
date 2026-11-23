@@ -1,0 +1,28 @@
+# Reverse proxy con HTTPS automático (Let's Encrypt) delante de los dos
+# frontends. Caddy pide y renueva los certificados solo; basta con que los
+# dominios apunten (registro A) a la IP del Droplet y los puertos 80/443 estén
+# abiertos.
+{
+	email {$ACME_EMAIL}
+}
+
+# Panel administrativo (apps/web): su nginx interno ya enruta /api y
+# /socket.io hacia la API, así que aquí solo se reenvía todo.
+{$PANEL_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy web:80
+}
+
+# PWA de personeros (apps/personero), misma API por detrás.
+{$PERSONERO_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy personero:80
+}

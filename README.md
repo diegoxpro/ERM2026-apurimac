@@ -93,6 +93,10 @@ correr en un ambiente accesible públicamente sin cambiarlas primero.
 
 ## Despliegue en un VPS con Docker
 
+> **Producción en DigitalOcean (con HTTPS):** sigue
+> [`docs/DESPLIEGUE-DIGITALOCEAN.md`](docs/DESPLIEGUE-DIGITALOCEAN.md), que usa
+> `docker-compose.prod.yml` para poner Caddy con certificados automáticos delante.
+
 ```bash
 cp .env.example .env    # completa JWT_SECRET/POSTGRES_*/CORS_ORIGIN/WEB_PORT reales
 docker compose up -d --build
