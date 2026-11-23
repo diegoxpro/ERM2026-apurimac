@@ -146,6 +146,10 @@ crontab -e
 
 Prueba manual: `bash deploy/backup-db.sh`.
 
+También desde el panel: **Configuración → Respaldos** lista estos archivos, permite descargarlos y crear uno al momento (la carpeta está montada en el contenedor `api`).
+
+La **lectura de actas con IA** se activa y configura en **Configuración → Lectura con IA** (clave de Anthropic y modelo). La variable `ANTHROPIC_API_KEY` del `.env` es opcional: lo guardado en el panel tiene prioridad.
+
 Restaurar un respaldo:
 
 ```bash

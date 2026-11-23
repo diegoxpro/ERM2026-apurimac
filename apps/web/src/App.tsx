@@ -10,6 +10,7 @@ import Usuarios from './pages/Usuarios';
 import LocalesYMesas from './pages/LocalesYMesas';
 import Asignacion from './pages/Asignacion';
 import ActasRecibidas from './pages/ActasRecibidas';
+import Configuracion from './pages/Configuracion';
 
 function useEnLinea() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -129,6 +130,14 @@ export default function App() {
         element={
           <RutaPrivada>
             <LlenarActas />
+          </RutaPrivada>
+        }
+      />
+      <Route
+        path="/configuracion"
+        element={
+          <RutaPrivada>
+            <Configuracion />
           </RutaPrivada>
         }
       />

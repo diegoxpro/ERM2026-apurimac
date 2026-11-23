@@ -159,3 +159,11 @@ model ActaResultado {
 
   @@index([actaId])
 }
+
+// Ajustes que el administrador cambia desde el panel (Configuración), como el
+// lector de actas con IA. Clave/valor para no tener que migrar por cada ajuste.
+model Configuracion {
+  clave         String   @id
+  valor         String
+  actualizadoEn DateTime @updatedAt
+}

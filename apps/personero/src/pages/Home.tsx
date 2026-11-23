@@ -4,7 +4,7 @@ import { obtenerMesasAsignadas, type MesaResumen } from '../lib/mesas';
 import { useAuth } from '../lib/auth';
 import { IconCamera, IconLogout } from '../components/Icons';
 import { comprimirImagen } from '../lib/imagen';
-import { leerFoto, SinConexionError } from '../lib/lector';
+import { leerFoto, lectorDisponible, SinConexionError } from '../lib/lector';
 import { ApiError } from '../lib/api';
 import MesaDetalle from './MesaDetalle';
 
@@ -94,6 +94,11 @@ function LeerActaConFoto({ mesasPropias }: { mesasPropias: Set<string> }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [estado, setEstado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    lectorDisponible().then(setVisible);
+  }, []);
 
   async function elegir(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
@@ -125,6 +130,7 @@ function LeerActaConFoto({ mesasPropias }: { mesasPropias: Set<string> }) {
     }
   }
 
+  if (!visible) return null;
   return (
     <div style={{ padding: '0 16px' }}>
       <button type="button" className="fila-foto fila-foto-ia" onClick={() => fileRef.current?.click()} disabled={!!estado}>

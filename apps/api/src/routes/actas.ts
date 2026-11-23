@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requiereAuth } from '../lib/auth';
 import type { ActaResumenDTO, ActaSyncResult, Cargo, LecturaActaDTO } from '@erm2026/shared';
-import { emparejarOrganizacion, leerActa, LectorError, lectorHabilitado } from '../lib/lectorActas';
+import { emparejarOrganizacion, leerActa, LectorError, motivoLectorNoDisponible } from '../lib/lectorActas';
 import type { Server as SocketIOServer } from 'socket.io';
 
 const resultadoSchema = z.object({
@@ -63,10 +63,15 @@ export function buildActasRouter(io: SocketIOServer) {
   router.use(requiereAuth);
 
   // Lector de actas: devuelve lo que la IA leyó en la foto. No guarda nada.
+  // Para mostrar u ocultar los botones de "leer con IA" en las apps.
+  router.get('/lector-estado', async (_req, res) => {
+    const motivo = await motivoLectorNoDisponible();
+    res.json({ disponible: !motivo, motivo });
+  });
+
   router.post('/leer', async (req, res) => {
-    if (!lectorHabilitado()) {
-      return res.status(503).json({ error: 'El lector de actas no está configurado en el servidor. Digita los datos a mano.' });
-    }
+    const motivo = await motivoLectorNoDisponible();
+    if (motivo) return res.status(503).json({ error: motivo });
     const parsed = leerSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: 'Foto inválida' });
     const input = parsed.data;

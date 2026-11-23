@@ -20,6 +20,19 @@ export async function leerFoto(fotoDataUrl: string, mesaId?: string, cargo?: Car
   }
 }
 
+const ESTADO_KEY = 'erm2026_personero_lector';
+
+// ¿Está activa la lectura con IA? Sin señal se usa la última respuesta conocida.
+export async function lectorDisponible(): Promise<boolean> {
+  try {
+    const r = await apiFetch<{ disponible: boolean }>('/api/actas/lector-estado');
+    localStorage.setItem(ESTADO_KEY, String(r.disponible));
+    return r.disponible;
+  } catch {
+    return localStorage.getItem(ESTADO_KEY) !== 'false';
+  }
+}
+
 export function claveFoto(mesaId: string, cargo: Cargo) {
   return `${mesaId}|${cargo}`;
 }
