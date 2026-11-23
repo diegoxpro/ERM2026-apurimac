@@ -30,7 +30,6 @@ services:
     environment:
       PANEL_DOMAIN: ${PANEL_DOMAIN:?Define PANEL_DOMAIN en .env}
       PERSONERO_DOMAIN: ${PERSONERO_DOMAIN:?Define PERSONERO_DOMAIN en .env}
-      ACME_EMAIL: ${ACME_EMAIL:?Define ACME_EMAIL en .env}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

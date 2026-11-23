@@ -93,7 +93,6 @@ Valores a completar:
 | `PANEL_DOMAIN` | `panel.tu-dominio.com` |
 | `PERSONERO_DOMAIN` | `personero.tu-dominio.com` |
 | `CORS_ORIGIN` | `https://panel.tu-dominio.com` |
-| `ACME_EMAIL` | tu correo (avisos de Let's Encrypt) |
 | `VITE_API_URL` | dejar **vacío** |
 | `DNI_API_TOKEN` | opcional |
 
