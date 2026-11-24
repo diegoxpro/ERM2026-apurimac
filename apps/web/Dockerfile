@@ -10,6 +10,8 @@ RUN npm run build --workspace=@erm2026/shared
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_REGION
+ENV VITE_REGION=$VITE_REGION
 
 WORKDIR /app/apps/web
 RUN npm run build

@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 const prisma = new PrismaClient();
-// SEED_DATASET elige la subcarpeta de data/seed a cargar (lambayeque | apurimac).
+// SEED_DATASET elige la subcarpeta de data/seed a cargar (lambayeque | apurimac | cajamarca).
 const SEED_DIR = path.join(__dirname, '..', '..', '..', 'data', 'seed', process.env.SEED_DATASET || 'lambayeque');
 
 function readJson<T>(file: string): T {
@@ -159,7 +159,9 @@ async function main() {
   console.log(`  ${listasCreadas} listas de candidatura`);
 
   console.log('--- Seed: usuarios de prueba ---');
-  const passwordHash = await bcrypt.hash('cambiar123', 10);
+  // SEED_PASSWORD permite que cada instancia nazca con su propia contraseña inicial.
+  const passwordInicial = process.env.SEED_PASSWORD || 'cambiar123';
+  const passwordHash = await bcrypt.hash(passwordInicial, 10);
   await prisma.usuario.upsert({
     where: { dni: '00000001' },
     update: {},
@@ -194,7 +196,7 @@ async function main() {
       coordinadorId: coordinador.id,
     },
   });
-  console.log('  usuarios admin/coordinador/personero con contraseña "cambiar123" (cámbiala antes de producción)');
+  console.log(`  usuarios admin/coordinador/personero creados${process.env.SEED_PASSWORD ? ' con SEED_PASSWORD' : ' con contraseña "cambiar123"'} (cámbiala antes de producción)`);
 
   console.log('\nSeed completado.');
 }

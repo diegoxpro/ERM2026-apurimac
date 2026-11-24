@@ -1,0 +1,99 @@
+# Instancia adicional del sistema (otra región) en el MISMO servidor que la
+# instancia principal, con su propia base de datos y sin landing.
+#
+# Cada instancia vive en su propia carpeta (p. ej. /opt/reg-caj-elect) con un
+# .env que define, entre otros:
+#   COMPOSE_FILE=docker-compose.instancia.yml
+#   COMPOSE_PROJECT_NAME=reg-caj-elect
+#   INSTANCIA=reg-caj-elect
+#   VITE_REGION=Cajamarca
+#   SEED_DATASET=cajamarca
+# Así, "docker compose ..." dentro de esa carpeta opera solo sobre esta instancia.
+#
+# No publica puertos: el Caddy de la instancia principal (docker-compose.prod.yml)
+# se une a la red externa "erm2026_proxy" y llega a "<INSTANCIA>-panel" y
+# "<INSTANCIA>-personero" por ahí. Los servicios del frontend se llaman "panel"
+# y "app-personero" (no "web"/"personero") para no chocar con los de la
+# instancia principal dentro de esa red compartida; la api y la base NO se unen
+# a ella, así "api" siempre resuelve a la api propia.
+#
+# Primera vez:  docker network create erm2026_proxy   (si aún no existe)
+# Arranque:     docker compose up -d --build
+# Datos:        docker compose exec api npm run seed
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DNI_API_TOKEN: ${DNI_API_TOKEN:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LECTOR_ACTAS_MODELO: ${LECTOR_ACTAS_MODELO:-claude-opus-5-5}
+      SEED_DATASET: ${SEED_DATASET}
+      BACKUP_DIR: /backups
+    volumes:
+      - /var/backups/${INSTANCIA}:/backups
+
+  panel:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ''
+        VITE_REGION: ${VITE_REGION}
+    restart: unless-stopped
+    depends_on:
+      - api
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - ${INSTANCIA}-panel
+
+  app-personero:
+    build:
+      context: .
+      dockerfile: apps/personero/Dockerfile
+      args:
+        VITE_API_URL: ''
+        VITE_REGION: ${VITE_REGION}
+    restart: unless-stopped
+    depends_on:
+      - api
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - ${INSTANCIA}-personero
+
+networks:
+  proxy:
+    external: true
+    name: erm2026_proxy
+
+volumes:
+  db_data:

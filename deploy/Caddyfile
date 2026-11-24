@@ -24,3 +24,6 @@
 	}
 	reverse_proxy personero:80
 }
+
+# Instancias adicionales en este mismo servidor (docker-compose.instancia.yml).
+import sitios/*.caddy

@@ -1,0 +1,19 @@
+# Instancia reg-caj-elect (Cajamarca), en /opt/reg-caj-elect con
+# docker-compose.instancia.yml. Caddy la alcanza por la red erm2026_proxy.
+conteo.bigdata.net.pe {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy reg-caj-elect-panel:80
+}
+
+personeros.bigdata.net.pe {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy reg-caj-elect-personero:80
+}
