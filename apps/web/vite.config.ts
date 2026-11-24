@@ -2,16 +2,23 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Región que se muestra en títulos y manifiesto (cada instancia la define al construir).
+const REGION = process.env.VITE_REGION || 'Lambayeque';
+
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'titulo-region',
+      transformIndexHtml: (html) => html.replace(/Lambayeque/g, REGION),
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Panel Administrativo — Lambayeque 2026',
+        name: `Panel Administrativo — ${REGION} 2026`,
         short_name: 'Panel ERM2026',
-        description: 'Conteo rápido no oficial — Segunda vuelta regional 2026, Lambayeque',
+        description: `Conteo rápido no oficial — Segunda vuelta regional 2026, ${REGION}`,
         theme_color: '#1D428A',
         background_color: '#ffffff',
         display: 'standalone',

@@ -1,0 +1,637 @@
+[
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "CAJAMARCA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "ASUNCION",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "COSPAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "CHETILLA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "ENCAÑADA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "JESUS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "LOS BAÑOS DEL INCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "LLACANORA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "MAGDALENA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "MATARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "NAMORA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJAMARCA",
+    "distrito": "SAN JUAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJABAMBA",
+    "distrito": "CAJABAMBA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CAJABAMBA",
+    "distrito": "CACHACHI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJABAMBA",
+    "distrito": "CONDEBAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CAJABAMBA",
+    "distrito": "SITACOCHA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "CELENDIN",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "CORTEGANA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "CHUMUCH",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "HUASMIN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "JORGE CHAVEZ",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "JOSE GALVEZ",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "MIGUEL IGLESIAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "OXAMARCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "SOROCHUCO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "SUCRE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "UTCO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CELENDIN",
+    "distrito": "LA LIBERTAD DE PALLAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "PEDRO GALVEZ",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "ICHOCAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "GREGORIO PITA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "JOSE MANUEL QUIROZ",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "EDUARDO VILLANUEVA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "JOSE SABOGAL",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MARCOS",
+    "distrito": "CHANCAY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHOTA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "ANGUIA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "COCHABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CONCHAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHADIN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHIGUIRIP",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHIMBAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "HUAMBOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "LAJAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "LLAMA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "MIRACOSTA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "PACCHA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "PION",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "QUEROCOTO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "TACABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "TOCMOCHE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "SAN JUAN DE LICUPIS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHOROPAMPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CHOTA",
+    "distrito": "CHALAMARCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "HUALGAYOC",
+    "distrito": "BAMBAMARCA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "HUALGAYOC",
+    "distrito": "CHUGUR",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "HUALGAYOC",
+    "distrito": "HUALGAYOC",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "SANTA CRUZ",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "CATACHE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "CHANCAYBAÑOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "LA ESPERANZA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "NINABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "PULAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "SEXI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "UTICYACU",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "YAUYUCAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "ANDABAMBA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SANTA CRUZ",
+    "distrito": "SAUCEPAMPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "CUTERVO",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "CALLAYUC",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "CUJILLO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "CHOROS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "LA RAMADA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "PIMPINGOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "QUEROCOTILLO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SAN ANDRES DE CUTERVO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SAN JUAN DE CUTERVO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SAN LUIS DE LUCMA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SANTA CRUZ",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SANTO DOMINGO DE LA CAPILLA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SANTO TOMAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "SOCOTA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CUTERVO",
+    "distrito": "TORIBIO CASANOVA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "JAEN",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "BELLAVISTA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "COLASAY",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "CHONTALI",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "POMAHUACA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "PUCARA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "SALLIQUE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "SAN FELIPE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "SAN JOSE DEL ALTO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "SANTA ROSA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "LAS PIRIAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "JAEN",
+    "distrito": "HUABAL",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "SAN IGNACIO",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "CHIRINOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "HUARANGO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "NAMBALLE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "LA COIPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "SAN JOSE DE LOURDES",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN IGNACIO",
+    "distrito": "TABACONAS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "CONTUMAZA",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "CHILETE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "GUZMANGO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "SAN BENITO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "CUPISNIQUE",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "TANTARICA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "YONAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "CONTUMAZA",
+    "distrito": "SANTA CRUZ DE TOLED",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "SAN MIGUEL",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "CALQUIS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "LA FLORIDA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "LLAPA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "NANCHOC",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "NIEPOS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "SAN GREGORIO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "SAN SILVESTRE DE COCHAN",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "EL PRADO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "UNION AGUA BLANCA",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "TONGOD",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "CATILLUC",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN MIGUEL",
+    "distrito": "BOLIVAR",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN PABLO",
+    "distrito": "SAN PABLO",
+    "capitalDeProvincia": true
+  },
+  {
+    "provincia": "SAN PABLO",
+    "distrito": "SAN BERNARDINO",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN PABLO",
+    "distrito": "SAN LUIS",
+    "capitalDeProvincia": false
+  },
+  {
+    "provincia": "SAN PABLO",
+    "distrito": "TUMBADEN",
+    "capitalDeProvincia": false
+  }
+]

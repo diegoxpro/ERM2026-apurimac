@@ -1,0 +1,20 @@
+[
+  {
+    "cargo": "GOBERNADOR_REGIONAL",
+    "nivel": "REGION",
+    "organizacion": "PARTIDO DEMOCRATICO SOMOS PERU",
+    "orden": 1,
+    "simboloUrl": "/simbolos/somos-peru.svg",
+    "expediente": "",
+    "jee": "CAJAMARCA"
+  },
+  {
+    "cargo": "GOBERNADOR_REGIONAL",
+    "nivel": "REGION",
+    "organizacion": "ALIANZA PARA EL PROGRESO",
+    "orden": 2,
+    "simboloUrl": "/simbolos/alianza-para-el-progreso.svg",
+    "expediente": "",
+    "jee": "CAJAMARCA"
+  }
+]

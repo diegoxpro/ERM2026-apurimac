@@ -30,6 +30,7 @@ services:
       DNI_API_TOKEN: ${DNI_API_TOKEN:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       LECTOR_ACTAS_MODELO: ${LECTOR_ACTAS_MODELO:-claude-opus-5-5}
+      SEED_DATASET: ${SEED_DATASET:-lambayeque}
     # Sin puerto publicado: solo "web" (nginx) lo alcanza, por la red interna
     # de Compose. Si necesitas pegarle directo para depurar, usa:
     #   docker compose exec api sh -c 'wget -qO- http://localhost:4000/health'
@@ -40,6 +41,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-}
+        VITE_REGION: ${VITE_REGION:-Lambayeque}
     restart: unless-stopped
     depends_on:
       - api
@@ -54,6 +56,7 @@ services:
       dockerfile: apps/personero/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-}
+        VITE_REGION: ${VITE_REGION:-Lambayeque}
     restart: unless-stopped
     depends_on:
       - api

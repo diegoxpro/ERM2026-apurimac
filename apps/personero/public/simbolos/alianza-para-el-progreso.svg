@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 634">
+  <!-- Símbolo provisional de Alianza para el Progreso (APP): reemplazar por el oficial del JNE si se requiere. -->
+  <rect x="25" y="25" width="700" height="584" rx="60" fill="#fff" stroke="#0033A0" stroke-width="40"/>
+  <text x="375" y="400" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900"
+        font-size="250" fill="#0033A0">APP</text>
+  <rect x="120" y="455" width="510" height="40" fill="#E30613"/>
+</svg>

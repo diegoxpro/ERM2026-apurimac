@@ -40,8 +40,19 @@ services:
       PERSONERO_DOMAIN: ${PERSONERO_DOMAIN:?Define PERSONERO_DOMAIN en .env}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/sitios:/etc/caddy/sitios:ro
       - caddy_data:/data
       - caddy_config:/config
+    # "proxy" une a Caddy con los frontends de instancias adicionales
+    # (docker-compose.instancia.yml). Crear una vez: docker network create erm2026_proxy
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: erm2026_proxy
 
 volumes:
   caddy_data:

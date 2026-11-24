@@ -2,16 +2,23 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Región que se muestra en títulos y manifiesto (cada instancia la define al construir).
+const REGION = process.env.VITE_REGION || 'Lambayeque';
+
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'titulo-region',
+      transformIndexHtml: (html) => html.replace(/Lambayeque/g, REGION),
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Personeros — Lambayeque 2026',
+        name: `Personeros — ${REGION} 2026`,
         short_name: 'Personeros',
-        description: 'Registro de actas para personeros — Segunda vuelta regional 2026, Lambayeque',
+        description: `Registro de actas para personeros — Segunda vuelta regional 2026, ${REGION}`,
         theme_color: '#1D428A',
         background_color: '#ffffff',
         display: 'standalone',
