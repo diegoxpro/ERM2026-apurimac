@@ -1,10 +1,10 @@
 [
   {
     "nombre": "PARTIDO DEMOCRATICO SOMOS PERU",
-    "simboloUrl": ""
+    "simboloUrl": "/simbolos/somos-peru.svg"
   },
   {
     "nombre": "ALIANZA PARA EL PROGRESO",
-    "simboloUrl": "/simbolos/alianza-para-el-progreso.svg"
+    "simboloUrl": "/simbolos/alianza-para-el-progreso.png"
   }
 ]

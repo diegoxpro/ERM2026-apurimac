@@ -65,6 +65,7 @@ services:
       args:
         VITE_API_URL: ''
         VITE_REGION: ${VITE_REGION}
+        ICONOS: ${ICONOS:-neutro}
     restart: unless-stopped
     depends_on:
       - api
@@ -81,6 +82,7 @@ services:
       args:
         VITE_API_URL: ''
         VITE_REGION: ${VITE_REGION}
+        ICONOS: ${ICONOS:-neutro}
     restart: unless-stopped
     depends_on:
       - api
