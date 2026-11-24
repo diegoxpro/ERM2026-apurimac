@@ -7,9 +7,19 @@ export {
 } from './cedula';
 
 // Elección que cubre este despliegue. Se muestra en ambas apps (panel y PWA).
+// La región sale de VITE_REGION al construir (Vite la reemplaza vía "define"
+// en apps/web y apps/personero); sin ella, queda Lambayeque.
+declare const process: { env: Record<string, string | undefined> };
+let regionDespliegue = 'Lambayeque';
+try {
+  regionDespliegue = process.env.VITE_REGION || regionDespliegue;
+} catch {
+  // En el navegador sin "define" no existe process: se usa el valor por defecto.
+}
+
 export const ELECCION = {
-  region: 'Lambayeque',
-  regionMayus: 'LAMBAYEQUE',
+  region: regionDespliegue,
+  regionMayus: regionDespliegue.toUpperCase(),
   nombre: 'Elecciones Regionales 2026 — Segunda Vuelta',
 } as const;
 
