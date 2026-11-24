@@ -37,6 +37,10 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    // Lo lee ELECCION en @erm2026/shared (títulos, selector de región, etc.).
+    'process.env.VITE_REGION': JSON.stringify(REGION),
+  },
   optimizeDeps: {
     // @erm2026/shared es un paquete del monorepo (enlazado por workspaces) compilado
     // a CommonJS; sin esto el servidor de dev lo sirve como archivo crudo y el
