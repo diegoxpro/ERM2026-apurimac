@@ -12,6 +12,9 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 ARG VITE_REGION
 ENV VITE_REGION=$VITE_REGION
+# ICONOS=neutro reemplaza favicon e íconos PWA (corazón de Somos Perú) por los de iconos-neutros/.
+ARG ICONOS
+RUN if [ "$ICONOS" = "neutro" ]; then cp apps/web/iconos-neutros/*.png apps/web/public/; fi
 
 WORKDIR /app/apps/web
 RUN npm run build

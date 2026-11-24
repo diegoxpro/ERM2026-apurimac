@@ -4,7 +4,7 @@
     "nivel": "REGION",
     "organizacion": "PARTIDO DEMOCRATICO SOMOS PERU",
     "orden": 1,
-    "simboloUrl": "",
+    "simboloUrl": "/simbolos/somos-peru.svg",
     "expediente": "",
     "jee": "CAJAMARCA"
   },
@@ -13,7 +13,7 @@
     "nivel": "REGION",
     "organizacion": "ALIANZA PARA EL PROGRESO",
     "orden": 2,
-    "simboloUrl": "/simbolos/alianza-para-el-progreso.svg",
+    "simboloUrl": "/simbolos/alianza-para-el-progreso.png",
     "expediente": "",
     "jee": "CAJAMARCA"
   }

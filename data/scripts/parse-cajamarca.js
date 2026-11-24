@@ -56,8 +56,8 @@ const texto = (v) => {
   }
 
   const organizaciones = [
-    { nombre: 'PARTIDO DEMOCRATICO SOMOS PERU', simboloUrl: '' }, // sin logo en esta instancia (pedido de Diego)
-    { nombre: 'ALIANZA PARA EL PROGRESO', simboloUrl: '/simbolos/alianza-para-el-progreso.svg' },
+    { nombre: 'PARTIDO DEMOCRATICO SOMOS PERU', simboloUrl: '/simbolos/somos-peru.svg' },
+    { nombre: 'ALIANZA PARA EL PROGRESO', simboloUrl: '/simbolos/alianza-para-el-progreso.png' },
   ];
   // Segunda vuelta regional de Cajamarca (6 dic 2026): Somos Perú (Edison Carrasco)
   // vs Alianza para el Progreso (Moises Gonzalez). Orden provisional según el
