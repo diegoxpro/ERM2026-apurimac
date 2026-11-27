@@ -44,9 +44,12 @@ function resumenDesdeCedula(c: CedulaMesaDTO, asignada: boolean): MesaResumen {
 
 // Mesas no asignadas de las que hay un acta guardada en este teléfono (aunque aún
 // no se haya enviado): también deben aparecer en "Mis mesas".
-async function mesasConActaLocal(excluir: Set<string>): Promise<MesaResumen[]> {
+// Con señal, el servidor ya lista las mesas cuyas actas se enviaron: aquí solo
+// faltan las que tienen actas todavía sin enviar (soloPendientes).
+async function mesasConActaLocal(excluir: Set<string>, soloPendientes = false): Promise<MesaResumen[]> {
   const actas = await db.actas.toArray();
-  const ids = [...new Set(actas.filter((a) => !a.estado.startsWith('duplicada')).map((a) => a.mesaId))].filter((id) => !excluir.has(id));
+  const relevantes = actas.filter((a) => (soloPendientes ? a.estado === 'pendiente' || a.estado === 'error' : !a.estado.startsWith('duplicada')));
+  const ids = [...new Set(relevantes.map((a) => a.mesaId))].filter((id) => !excluir.has(id));
   const extra: MesaResumen[] = [];
   for (const id of ids) {
     const cache = await db.mesas.get(id);
@@ -67,7 +70,10 @@ export async function obtenerMesasAsignadas(): Promise<MesaResumen[]> {
       const data = await apiFetch<{ items: MesaResumen[] }>('/api/mesas?mine=true&limit=50');
       const asignadas = data.items.filter((m) => m.asignada !== false).map((m) => m.id);
       localStorage.setItem(MESAS_PROPIAS_KEY, JSON.stringify(asignadas));
-      const items = [...data.items, ...(await mesasConActaLocal(new Set(data.items.map((m) => m.id))))];
+      // Mesas sin ninguna acta en el servidor: se olvidan las copias locales ya enviadas
+      // (p. ej. un administrador borró actas de prueba).
+      for (const m of data.items) if (m.actasRegistradas === 0) await olvidarActasBorradas(m.id, null);
+      const items = [...data.items, ...(await mesasConActaLocal(new Set(data.items.map((m) => m.id)), true))];
       localStorage.setItem(MESAS_COUNT_KEY, String(items.length));
       return items;
     } catch {
@@ -86,11 +92,25 @@ export async function obtenerCedula(mesaId: string): Promise<CedulaMesaDTO> {
   if (navigator.onLine) {
     const data = await apiFetch<CedulaMesaDTO>(`/api/mesas/${mesaId}/cedula`);
     await cachearMesa(data);
+    const sinRegistrar = new Set(data.columnas.filter((c) => c.estado === 'SIN_REGISTRAR').map((c) => c.cargo));
+    await olvidarActasBorradas(mesaId, sinRegistrar);
     return conEstadoLocal(data);
   }
   const cache = await db.mesas.get(mesaId);
   if (!cache) throw new Error('No hay datos guardados de esta mesa. Conéctate a internet al menos una vez.');
   return conEstadoLocal(cache.data);
+}
+
+// El servidor es la fuente de verdad: si dice que un cargo de la mesa no tiene
+// acta, la copia local marcada como enviada (o duplicada) ya no vale y se borra.
+// Las actas pendientes o con error NO se tocan: todavía no llegaron al servidor.
+// cargos = null significa "todos los cargos de la mesa".
+async function olvidarActasBorradas(mesaId: string, cargos: Set<string> | null) {
+  const locales = await db.actas.where('mesaId').equals(mesaId).toArray();
+  const borrar = locales.filter(
+    (a) => (a.estado === 'sincronizada' || a.estado.startsWith('duplicada')) && (cargos === null || cargos.has(a.cargo)),
+  );
+  if (borrar.length) await db.actas.bulkDelete(borrar.map((a) => a.clienteId));
 }
 
 // Superpone el estado de actas guardadas localmente (aún no sincronizadas)
