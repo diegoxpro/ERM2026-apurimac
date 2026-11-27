@@ -5,6 +5,7 @@ import { comprimirImagen } from '../lib/imagen';
 import { leerFoto, lectorDisponible, SinConexionError } from '../lib/lector';
 import { apiFetch, ApiError } from '../lib/api';
 import { obtenerMesasAsignadas } from '../lib/mesas';
+import { EVENTO_FOTOS_SIN_MESA, guardarFotoSinMesa } from '../lib/fotosSinMesa';
 
 // La IA lee el número de mesa de la foto y abre directamente el formulario de
 // esa mesa, ya prellenado para revisar. Sirve también para mesas que NO están
@@ -17,6 +18,7 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
   const galeriaRef = useRef<HTMLInputElement>(null);
   const [estado, setEstado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [conIA, setConIA] = useState(false);
   const [buscando, setBuscando] = useState(false);
   const [codigo, setCodigo] = useState('');
@@ -24,6 +26,10 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
 
   useEffect(() => {
     lectorDisponible().then(setConIA);
+    // Cuando la cola de fotos sin señal se procesa, el aviso de arriba toma el relevo.
+    const limpiar = () => navigator.onLine && setInfo(null);
+    window.addEventListener(EVENTO_FOTOS_SIN_MESA, limpiar);
+    return () => window.removeEventListener(EVENTO_FOTOS_SIN_MESA, limpiar);
   }, []);
 
   async function esPropia(mesaId: string): Promise<boolean> {
@@ -41,9 +47,12 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
     e.target.value = '';
     if (!archivo) return;
     setError(null);
+    setInfo(null);
+    let foto: string | null = null;
     try {
       setEstado('Comprimiendo…');
-      const foto = await comprimirImagen(archivo);
+      foto = await comprimirImagen(archivo);
+      if (!navigator.onLine) throw new SinConexionError('Sin conexión');
       setEstado('Leyendo el acta con IA…');
       const lectura = await leerFoto(foto);
       if (!lectura.mesaId || !lectura.cargo) {
@@ -58,13 +67,16 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
         navigate(`/mesa/${lectura.mesaId}/cargo/${lectura.cargo}`, { state: { foto, lectura, noAsignada } });
       }
     } catch (err) {
-      setError(
-        err instanceof SinConexionError
-          ? 'Sin señal. Abre la mesa y toma la foto desde el formulario: quedará guardada y se leerá al volver la conexión.'
-          : err instanceof ApiError
-          ? err.message
-          : 'No se pudo leer la foto.',
-      );
+      if (err instanceof SinConexionError && foto) {
+        // Sin señal: la foto se guarda en el teléfono y se procesa sola al volver la conexión.
+        const n = await guardarFotoSinMesa(foto);
+        setInfo(
+          `Sin señal: la foto quedó guardada en este teléfono. ${n === 1 ? 'Falta 1 imagen' : `Faltan ${n} imágenes`} por procesar con la IA; ` +
+            'cuando vuelva la señal se leerán y las actas se enviarán solas. Puedes seguir escaneando.',
+        );
+      } else {
+        setError(err instanceof ApiError ? err.message : 'No se pudo leer la foto.');
+      }
     } finally {
       setEstado(null);
     }
@@ -129,6 +141,7 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
           ¿Acta de una mesa que no es tuya? Búscala por su número
         </button>
       )}
+      {info && <div className="mensaje info">{info}</div>}
       {error && <div className="mensaje error">{error}</div>}
     </div>
   );

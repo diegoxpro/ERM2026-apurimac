@@ -2,6 +2,7 @@ import type { ActaSyncResult } from '@erm2026/shared';
 import { apiFetch, ApiError, SesionExpiradaError } from './api';
 import { db } from './db';
 import { leerFotosEnCola } from './lector';
+import { procesarFotosSinMesa } from './fotosSinMesa';
 
 let sincronizando = false;
 
@@ -83,11 +84,14 @@ export function iniciarSyncAutomatico() {
   window.addEventListener('online', () => {
     sincronizarPendientes();
     leerFotosEnCola();
+    procesarFotosSinMesa();
   });
+  procesarFotosSinMesa();
   // Reintento periódico por si la conexión es intermitente pero el navegador
   // no dispara el evento "online" de forma confiable (común en zonas rurales).
   setInterval(() => {
     sincronizarPendientes();
     leerFotosEnCola();
+    procesarFotosSinMesa();
   }, 30_000);
 }

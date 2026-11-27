@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './lib/auth';
 import Login from './pages/Login';
 import SesionExpirada from './components/SesionExpirada';
+import AvisoFotosSinMesa from './components/AvisoFotosSinMesa';
 import Home from './pages/Home';
 import MesaDetalle from './pages/MesaDetalle';
 import CargoFormulario from './pages/CargoFormulario';
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <>
     <SesionExpirada />
+    {usuario && <AvisoFotosSinMesa />}
     <Routes>
       <Route path="/login" element={cargando ? <div className="pantalla-carga" /> : usuario ? <Navigate to="/" replace /> : <Login />} />
       <Route

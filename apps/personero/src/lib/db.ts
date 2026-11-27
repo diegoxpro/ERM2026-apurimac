@@ -31,6 +31,21 @@ export interface FotoPorLeer {
   error?: string;
 }
 
+// Foto escaneada desde "Leer acta con foto" SIN señal: todavía no se sabe de
+// qué mesa es. Al volver la conexión la IA la lee, se registra el acta y se envía.
+export interface FotoSinMesa {
+  id: string;
+  fotoDataUrl?: string; // se borra al enviarse, para no llenar el teléfono
+  tomadaEn: string;
+  estado: 'esperando' | 'enviada' | 'duplicada' | 'no_reconocida' | 'error';
+  mesaCodigo?: string;
+  cargo?: Cargo;
+  observada?: boolean;
+  mensaje?: string;
+  procesadaEn?: string;
+  avisoVisto?: boolean; // el personero ya vio el resultado
+}
+
 export interface MesaCache {
   mesaId: string;
   data: CedulaMesaDTO;
@@ -41,6 +56,7 @@ class PersoneroDB extends Dexie {
   actas!: Table<ActaLocal, string>;
   mesas!: Table<MesaCache, string>;
   fotosPorLeer!: Table<FotoPorLeer, string>;
+  fotosSinMesa!: Table<FotoSinMesa, string>;
 
   constructor() {
     super(`erm2026_personero_${ELECCION.regionMayus}`);
@@ -52,6 +68,12 @@ class PersoneroDB extends Dexie {
       actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
       mesas: 'mesaId',
       fotosPorLeer: 'clave, estado, mesaId',
+    });
+    this.version(3).stores({
+      actas: 'clienteId, estado, mesaId, digitadaEn, [mesaId+cargo]',
+      mesas: 'mesaId',
+      fotosPorLeer: 'clave, estado, mesaId',
+      fotosSinMesa: 'id, estado, tomadaEn',
     });
   }
 }

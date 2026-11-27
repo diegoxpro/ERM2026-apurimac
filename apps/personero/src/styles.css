@@ -330,3 +330,13 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 .aviso-no-asignada { background: #fff7e6; border: 1px solid #f5d48a; color: #7a5200; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin: 0 16px 12px; }
 .contenido-formulario .aviso-no-asignada { margin: 0 0 12px; }
 .tarjeta-mesa-info strong .etiqueta-no-asignada { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; color: #7a5200; background: #fff7e6; border: 1px solid #f5d48a; border-radius: 999px; padding: 1px 8px; vertical-align: middle; }
+
+/* Aviso de fotos escaneadas sin señal (cola de IA) y de actas ya enviadas */
+.aviso-fotos-sin-mesa { position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; gap: 6px; padding: 8px 12px 0; }
+.aviso-fsm { border-radius: 10px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.aviso-fsm strong { font-size: 14px; }
+.aviso-fsm ul { margin: 2px 0 6px; padding-left: 18px; }
+.aviso-fsm .btn { align-self: flex-end; padding: 6px 14px; font-size: 13px; }
+.aviso-fsm.pendiente { background: #fef3c7; color: #78350f; border: 1px solid #f59e0b; }
+.aviso-fsm.listo { background: #e7f7e7; color: #166534; border: 1px solid #22c55e; }
+.aviso-fsm.mixto { background: #fff7ed; color: #7c2d12; border: 1px solid #fb923c; }
