@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconCamera } from './Icons';
+import { IconCamera, IconImage } from './Icons';
 import { comprimirImagen } from '../lib/imagen';
 import { leerFoto, lectorDisponible, SinConexionError } from '../lib/lector';
 import { apiFetch, ApiError } from '../lib/api';
@@ -13,6 +13,8 @@ import { obtenerMesasAsignadas } from '../lib/mesas';
 export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<string> }) {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  // Sin "capture": abre la galería/archivos para usar una foto ya tomada.
+  const galeriaRef = useRef<HTMLInputElement>(null);
   const [estado, setEstado] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conIA, setConIA] = useState(false);
@@ -102,6 +104,10 @@ export default function LeerActaConFoto({ mesasPropias }: { mesasPropias?: Set<s
             <span className="fila-foto-accion">Tomar</span>
           </button>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={elegir} />
+          <button type="button" className="enlace-galeria" onClick={() => galeriaRef.current?.click()} disabled={!!estado}>
+            <IconImage /> Elegir foto de la galería
+          </button>
+          <input ref={galeriaRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={elegir} />
         </>
       )}
       {mostrarBuscar ? (

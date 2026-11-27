@@ -8,7 +8,7 @@ import { claveFoto, encolarFoto, leerFoto, lectorDisponible, SinConexionError } 
 import { ApiError } from '../lib/api';
 import { comprimirImagen } from '../lib/imagen';
 import { obtenerCedula, tituloCorto, ESTADO_LABEL } from '../lib/mesas';
-import { IconArrowLeft, IconCamera } from '../components/Icons';
+import { IconArrowLeft, IconCamera, IconImage } from '../components/Icons';
 
 export default function CargoFormulario() {
   const { mesaId, cargo } = useParams<{ mesaId: string; cargo: Cargo }>();
@@ -189,6 +189,7 @@ function Formulario({
   const noAsignada = !!(location.state as { noAsignada?: boolean } | null)?.noAsignada;
   const [conIA, setConIA] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+  const galeriaRef = useRef<HTMLInputElement>(null);
 
   const numero = (s: string) => Math.max(0, parseInt(s, 10) || 0);
   const validos = useMemo(() => Object.values(votos).reduce((a, b) => a + numero(b), 0), [votos]);
@@ -355,6 +356,10 @@ function Formulario({
           <span className="fila-foto-accion">{foto ? 'Cambiar' : 'Tomar'}</span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={elegirFoto} />
+        <button type="button" className="enlace-galeria" onClick={() => galeriaRef.current?.click()} disabled={comprimiendo || leyendo}>
+          <IconImage /> Elegir foto de la galería
+        </button>
+        <input ref={galeriaRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={elegirFoto} />
         {conIA && foto && !leyendo && !leidaPorIA && navigator.onLine && (
           <button type="button" className="btn secundario btn-leer-ia" onClick={() => leerConIA(foto)}>
             Leer esta foto con IA

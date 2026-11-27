@@ -61,6 +61,7 @@ export default function LlenarActas() {
   const [lecturaInicial, setLecturaInicial] = useState<{ foto: string; lectura: LecturaActaDTO } | null>(null);
   const [leyendoFoto, setLeyendoFoto] = useState<string | null>(null);
   const fotoRef = useRef<HTMLInputElement>(null);
+  const galeriaRef = useRef<HTMLInputElement>(null);
   // Si el administrador desactivó la lectura con IA (Configuración), se ocultan sus botones.
   const [lectorDisponible, setLectorDisponible] = useState(false);
 
@@ -178,11 +179,17 @@ export default function LlenarActas() {
           <p>Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).</p>
         </div>
         {lectorDisponible && (
-          <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
-            <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
+              <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
+            </button>
+            <button className="btn secundario" onClick={() => galeriaRef.current?.click()} disabled={!!leyendoFoto}>
+              Elegir imagen de galería
+            </button>
+          </div>
         )}
         <input ref={fotoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={leerActaConFoto} />
+        <input ref={galeriaRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={leerActaConFoto} />
       </div>
 
       {mensaje && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}

@@ -301,6 +301,12 @@ button.btn.secundario { background: white; color: var(--color-primario-oscuro); 
 
 /* --- Lector de actas (IA) --- */
 .fila-foto-ia { border: 1.5px dashed var(--color-primario); margin-top: 0; }
+.enlace-galeria {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: none; border: none;
+  color: var(--color-primario-oscuro); font-weight: 600; font-size: 13.5px; padding: 4px 0 10px; margin-top: -4px; cursor: pointer;
+}
+.enlace-galeria svg { width: 18px; height: 18px; }
+.enlace-galeria:disabled { opacity: 0.5; }
 .btn-leer-ia { width: 100%; margin-bottom: 10px; }
 .alerta-revisar {
   background: #fef3c7; color: #78350f; border: 1px solid #f59e0b; border-radius: 10px;
