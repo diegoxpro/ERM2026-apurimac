@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './lib/auth';
 import Sidebar from './components/Sidebar';
 import SesionExpirada from './components/SesionExpirada';
@@ -67,10 +67,17 @@ function Layout({ children }: { children: ReactNode }) {
   );
 }
 
+// Rutas que ve el coordinador; cualquier otra lo devuelve a Resultados.
+const RUTAS_COORDINADOR = ['/resultados', '/mesas-actas'];
+
 function RutaPrivada({ children }: { children: ReactNode }) {
   const { usuario, cargando } = useAuth();
+  const location = useLocation();
   if (cargando) return null;
   if (!usuario) return <Navigate to="/login" replace />;
+  if (usuario.rol === 'COORDINADOR' && !RUTAS_COORDINADOR.includes(location.pathname)) {
+    return <Navigate to="/resultados" replace />;
+  }
   return <Layout>{children}</Layout>;
 }
 
@@ -133,6 +140,14 @@ export default function App() {
         element={
           <RutaPrivada>
             <LlenarActas />
+          </RutaPrivada>
+        }
+      />
+      <Route
+        path="/mesas-actas"
+        element={
+          <RutaPrivada>
+            <LlenarActas modo="coordinador" />
           </RutaPrivada>
         }
       />

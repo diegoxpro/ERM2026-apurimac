@@ -15,7 +15,9 @@ mesasRouter.get('/', async (req, res) => {
   const distrito = req.query.distrito ? String(req.query.distrito) : undefined;
   const localVotacionId = req.query.localId ? String(req.query.localId) : undefined;
   const soloPropias = req.query.mine === 'true';
-  const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 500);
+  // "Mesas y actas" del coordinador: las mesas a cargo de sus personeros.
+  const soloCoordinadas = req.query.coordinadas === 'true';
+  const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 2000);
   const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
 
   const where: any = {};
@@ -23,6 +25,9 @@ mesasRouter.get('/', async (req, res) => {
   // pero de las que él mismo envió un acta (p.ej. cubrió a un compañero).
   if (soloPropias) {
     where.AND = [{ OR: [{ personeroId: req.usuario!.sub }, { actas: { some: { personeroId: req.usuario!.sub } } }] }];
+  }
+  if (soloCoordinadas) {
+    where.personero = { coordinadorId: req.usuario!.sub };
   }
   if (search) {
     where.OR = [
@@ -47,7 +52,7 @@ mesasRouter.get('/', async (req, res) => {
         personero: true,
         actas: true,
       },
-      orderBy: { codigo: 'asc' },
+      orderBy: soloCoordinadas ? [{ localVotacion: { nombre: 'asc' } }, { codigo: 'asc' }] : { codigo: 'asc' },
       take: limit,
       skip: offset,
     }),
@@ -65,6 +70,7 @@ mesasRouter.get('/', async (req, res) => {
         electores: m.electores,
         electoresDiscapacidad: m.electoresDiscapacidad,
         localVotacion: m.localVotacion.nombre,
+        localVotacionId: m.localVotacionId,
         distrito: m.localVotacion.distrito.nombre,
         provincia: m.localVotacion.distrito.provincia.nombre,
         personeroId: m.personeroId,

@@ -11,11 +11,13 @@ interface ItemNav {
 
 const ITEMS: ItemNav[] = [
   { to: '/resultados', label: 'Resultados', icono: IconChart, roles: ['ADMIN', 'COORDINADOR'] },
-  { to: '/usuarios', label: 'Usuarios', icono: IconUsers, roles: ['ADMIN', 'COORDINADOR'] },
-  { to: '/locales', label: 'Locales y mesas', icono: IconPin, roles: ['ADMIN', 'COORDINADOR'] },
-  { to: '/asignacion', label: 'Asignación de mesas', icono: IconUserCheck, roles: ['ADMIN', 'COORDINADOR'] },
-  { to: '/llenar-actas', label: 'Llenar actas', icono: IconEdit, roles: ['ADMIN', 'COORDINADOR', 'PERSONERO'] },
-  { to: '/actas', label: 'Actas recibidas', icono: IconFile, roles: ['ADMIN', 'COORDINADOR'] },
+  // El coordinador solo ve dos opciones: Resultados y sus mesas/actas.
+  { to: '/mesas-actas', label: 'Mesas y actas', icono: IconEdit, roles: ['COORDINADOR'] },
+  { to: '/usuarios', label: 'Usuarios', icono: IconUsers, roles: ['ADMIN'] },
+  { to: '/locales', label: 'Locales y mesas', icono: IconPin, roles: ['ADMIN'] },
+  { to: '/asignacion', label: 'Asignación de mesas', icono: IconUserCheck, roles: ['ADMIN'] },
+  { to: '/llenar-actas', label: 'Llenar actas', icono: IconEdit, roles: ['ADMIN', 'PERSONERO'] },
+  { to: '/actas', label: 'Actas recibidas', icono: IconFile, roles: ['ADMIN'] },
   { to: '/configuracion', label: 'Configuración', icono: IconSettings, roles: ['ADMIN'] },
 ];
 
@@ -29,7 +31,7 @@ export default function Sidebar({ rol }: { rol: RolUsuario }) {
         <span className="icono">
           <IconClipboard />
         </span>
-        Panel de Administrativos
+        {rol === 'COORDINADOR' ? 'Panel del Coordinador' : 'Panel de Administrativos'}
       </div>
       <nav>
         {items.map((item) => {

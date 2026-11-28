@@ -11,6 +11,7 @@ interface MesaFila {
   id: string;
   codigo: string;
   localVotacion: string;
+  localVotacionId?: string;
   distrito: string;
   provincia: string;
   electores: number;
@@ -47,7 +48,10 @@ function tituloCorto(cargo: string): string {
   }
 }
 
-export default function LlenarActas() {
+// modo "coordinador": lista todas las mesas de sus personeros agrupadas por
+// local (colegio), con botones por mesa para foto (IA), galería o digitar a mano.
+export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
+  const esCoordinador = modo === 'coordinador';
   const [busqueda, setBusqueda] = useState('');
   const [geo, setGeo] = useState<GeoProvincia[]>([]);
   const [provinciaFiltro, setProvinciaFiltro] = useState('');
@@ -62,6 +66,9 @@ export default function LlenarActas() {
   const [leyendoFoto, setLeyendoFoto] = useState<string | null>(null);
   const fotoRef = useRef<HTMLInputElement>(null);
   const galeriaRef = useRef<HTMLInputElement>(null);
+  // Mesa elegida al tocar "Foto" o "Galería" en una fila (modo coordinador).
+  const mesaObjetivo = useRef<MesaFila | null>(null);
+  const [leyendoMesaId, setLeyendoMesaId] = useState<string | null>(null);
   // Si el administrador desactivó la lectura con IA (Configuración), se ocultan sus botones.
   const [lectorDisponible, setLectorDisponible] = useState(false);
 
@@ -77,6 +84,15 @@ export default function LlenarActas() {
   const hayFiltro = busqueda.trim().length >= 2 || provinciaFiltro !== '' || distritoFiltro !== '';
 
   async function buscarMesas() {
+    if (esCoordinador) {
+      try {
+        const data = await apiFetch<{ items: MesaFila[] }>('/api/mesas?coordinadas=true&limit=2000');
+        setMesas(data.items);
+      } catch (e) {
+        setMensaje({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudieron cargar tus mesas' });
+      }
+      return;
+    }
     if (!hayFiltro) {
       setMesas(null);
       return;
@@ -94,16 +110,56 @@ export default function LlenarActas() {
   }
 
   useEffect(() => {
+    if (esCoordinador) return; // carga una vez; el buscador filtra en el navegador
     const t = setTimeout(buscarMesas, 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busqueda, provinciaFiltro, distritoFiltro]);
 
-  async function abrirMesa(mesa: MesaFila) {
+  useEffect(() => {
+    if (esCoordinador) buscarMesas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esCoordinador]);
+
+  // Modo coordinador: filtro local y agrupación por local de votación (colegio).
+  const gruposPorLocal = useMemo(() => {
+    if (!esCoordinador || !mesas) return [];
+    const q = busqueda.trim().toLowerCase();
+    const filtradas = q
+      ? mesas.filter(
+          (m) =>
+            m.codigo.includes(q) ||
+            m.localVotacion.toLowerCase().includes(q) ||
+            (m.personeroNombre ?? '').toLowerCase().includes(q),
+        )
+      : mesas;
+    const mapa = new Map<string, { local: string; distrito: string; provincia: string; mesas: MesaFila[] }>();
+    for (const m of filtradas) {
+      const clave = m.localVotacionId ?? `${m.localVotacion}|${m.distrito}`;
+      if (!mapa.has(clave)) mapa.set(clave, { local: m.localVotacion, distrito: m.distrito, provincia: m.provincia, mesas: [] });
+      mapa.get(clave)!.mesas.push(m);
+    }
+    return [...mapa.values()].sort((a, b) => a.local.localeCompare(b.local));
+  }, [esCoordinador, mesas, busqueda]);
+
+  function fotoParaMesa(m: MesaFila, desdeGaleria: boolean) {
+    mesaObjetivo.current = m;
+    (desdeGaleria ? galeriaRef : fotoRef).current?.click();
+  }
+
+  // "Ingresar a mano": si la mesa tiene un solo cargo pendiente, abre directo el formulario.
+  async function manualParaMesa(m: MesaFila) {
+    await abrirMesa(m, true);
+  }
+
+  async function abrirMesa(mesa: MesaFila, directo = false) {
     setMesaSeleccionada(mesa);
     setCedula(null);
     try {
-      setCedula(await apiFetch<CedulaMesaDTO>(`/api/mesas/${mesa.id}/cedula`));
+      const ced = await apiFetch<CedulaMesaDTO>(`/api/mesas/${mesa.id}/cedula`);
+      setCedula(ced);
+      const pendientes = ced.columnas.filter((c) => c.estado === 'SIN_REGISTRAR');
+      if (directo && pendientes.length === 1) setColumnaActiva(pendientes[0]);
     } catch (e) {
       setMensaje({ tipo: 'error', texto: e instanceof ApiError ? e.message : 'No se pudo cargar la cédula de esta mesa' });
       setMesaSeleccionada(null);
@@ -122,13 +178,19 @@ export default function LlenarActas() {
   async function leerActaConFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
     e.target.value = '';
+    const objetivo = mesaObjetivo.current;
+    mesaObjetivo.current = null;
     if (!archivo) return;
     setMensaje(null);
+    setLeyendoMesaId(objetivo?.id ?? null);
     try {
       setLeyendoFoto('Comprimiendo la foto…');
       const foto = await comprimirImagen(archivo);
       setLeyendoFoto('Leyendo el acta con IA…');
-      const lectura = await apiFetch<LecturaActaDTO>('/api/actas/leer', { method: 'POST', body: JSON.stringify({ fotoBase64: foto }) });
+      const lectura = await apiFetch<LecturaActaDTO>('/api/actas/leer', {
+        method: 'POST',
+        body: JSON.stringify({ fotoBase64: foto, mesaId: objetivo?.id }),
+      });
       if (!lectura.mesaId || !lectura.mesaCodigo || !lectura.cargo) {
         setMensaje({
           tipo: 'error',
@@ -136,8 +198,12 @@ export default function LlenarActas() {
         });
         return;
       }
-      const filas = await apiFetch<{ items: MesaFila[] }>(`/api/mesas?search=${encodeURIComponent(lectura.mesaCodigo)}&limit=20`);
-      const fila = filas.items.find((m) => m.id === lectura.mesaId);
+      const fila =
+        objetivo && objetivo.id === lectura.mesaId
+          ? objetivo
+          : (await apiFetch<{ items: MesaFila[] }>(`/api/mesas?search=${encodeURIComponent(lectura.mesaCodigo)}&limit=20`)).items.find(
+              (m) => m.id === lectura.mesaId,
+            );
       if (!fila) {
         setMensaje({ tipo: 'error', texto: `La mesa ${lectura.mesaCodigo} no está en tu ámbito.` });
         return;
@@ -158,6 +224,7 @@ export default function LlenarActas() {
       setMensaje({ tipo: 'error', texto: err instanceof ApiError ? err.message : 'No se pudo leer la foto (¿sin conexión?).' });
     } finally {
       setLeyendoFoto(null);
+      setLeyendoMesaId(null);
     }
   }
 
@@ -175,10 +242,14 @@ export default function LlenarActas() {
     <div>
       <div className="page-header">
         <div>
-          <h2>Llenar actas</h2>
-          <p>Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).</p>
+          <h2>{esCoordinador ? 'Mesas y actas' : 'Llenar actas'}</h2>
+          <p>
+            {esCoordinador
+              ? 'Las mesas de tus personeros, por colegio. Toma o sube la foto del acta para que la lea la IA, o ingrésala a mano.'
+              : 'Registra desde el panel el acta de una mesa (por ejemplo, la que un personero reporta por teléfono o foto).'}
+          </p>
         </div>
-        {lectorDisponible && (
+        {lectorDisponible && !esCoordinador && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button className="btn" onClick={() => fotoRef.current?.click()} disabled={!!leyendoFoto}>
               <IconCamera /> {leyendoFoto ?? 'Leer acta con foto'}
@@ -194,6 +265,78 @@ export default function LlenarActas() {
 
       {mensaje && <div className={`mensaje ${mensaje.tipo}`}>{mensaje.texto}</div>}
 
+      {esCoordinador && (
+        <div className="card">
+          <div className="toolbar">
+            <div className="buscador">
+              <input placeholder="Buscar mesa, colegio o personero" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            </div>
+          </div>
+          {!mesas && <div className="vacio">Cargando tus mesas…</div>}
+          {mesas && mesas.length === 0 && (
+            <div className="vacio">Todavía no tienes mesas: el administrador debe asignar mesas a tus personeros.</div>
+          )}
+          {mesas && mesas.length > 0 && gruposPorLocal.length === 0 && <div className="vacio">Sin resultados.</div>}
+          {gruposPorLocal.map((g) => {
+            const completas = g.mesas.filter((m) => m.actasRegistradas >= m.actasEsperadas).length;
+            return (
+              <div key={g.local + g.distrito} className="grupo-local">
+                <div className="grupo-local-header">
+                  <div>
+                    <strong>{g.local}</strong>
+                    <div className="subtexto">
+                      {g.distrito}, {g.provincia}
+                    </div>
+                  </div>
+                  <span className="grupo-local-avance">
+                    {completas} de {g.mesas.length} mesas con acta
+                  </span>
+                </div>
+                {g.mesas.map((m) => {
+                  const completa = m.actasRegistradas >= m.actasEsperadas;
+                  const leyendoEsta = leyendoMesaId === m.id;
+                  return (
+                    <div key={m.id} className={`fila-mesa-coord ${completa ? 'completa' : ''}`}>
+                      <div className="fila-mesa-info">
+                        <strong>Mesa {m.codigo}</strong>
+                        <span className="subtexto">Personero: {m.personeroNombre ?? '—'}</span>
+                        <span className={`badge-estado ${completa ? 'ENVIADA' : 'SIN_REGISTRAR'}`}>
+                          {completa ? 'Acta enviada' : `${m.actasRegistradas} de ${m.actasEsperadas} actas`}
+                        </span>
+                      </div>
+                      <div className="fila-mesa-acciones">
+                        {completa ? (
+                          <button className="btn pequeno secundario" onClick={() => abrirMesa(m)}>
+                            Ver acta
+                          </button>
+                        ) : (
+                          <>
+                            {lectorDisponible && (
+                              <>
+                                <button className="btn pequeno" onClick={() => fotoParaMesa(m, false)} disabled={!!leyendoFoto}>
+                                  <IconCamera /> {leyendoEsta ? leyendoFoto : 'Tomar foto'}
+                                </button>
+                                <button className="btn pequeno secundario" onClick={() => fotoParaMesa(m, true)} disabled={!!leyendoFoto}>
+                                  Subir imagen
+                                </button>
+                              </>
+                            )}
+                            <button className="btn pequeno secundario" onClick={() => manualParaMesa(m)} disabled={!!leyendoFoto}>
+                              Ingresar a mano
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!esCoordinador && (
       <div className="card">
         <div className="toolbar">
           <div className="buscador">
@@ -269,6 +412,7 @@ export default function LlenarActas() {
           </table>
         )}
       </div>
+      )}
 
       {mesaSeleccionada && !columnaActiva && (
         <div className="modal-fondo" onClick={cerrarMesa}>
