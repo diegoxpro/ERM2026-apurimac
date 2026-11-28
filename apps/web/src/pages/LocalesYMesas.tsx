@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CrearLocalInput, LocalDTO, MesaDTO } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 interface GeoProvincia {
   nombre: string;
@@ -52,6 +53,7 @@ export default function LocalesYMesas() {
     }
   }
 
+  const pag = usePaginacion(locales);
   return (
     <div>
       <div className="page-header">
@@ -95,7 +97,7 @@ export default function LocalesYMesas() {
               </tr>
             </thead>
             <tbody>
-              {locales.map((l) => (
+              {pag.visibles.map((l) => (
                 <tr key={l.id}>
                   <td>
                     <strong>{l.nombre}</strong>
@@ -117,6 +119,7 @@ export default function LocalesYMesas() {
             </tbody>
           </table>
         )}
+        <Paginador {...pag} />
       </div>
 
       {mostrarModal && (
@@ -279,6 +282,7 @@ function ModalMesas({ local, onCerrar, onCambio }: { local: LocalDTO; onCerrar: 
     }
   }
 
+  const pagMesas = usePaginacion(mesas);
   return (
     <div className="modal-fondo" onClick={onCerrar}>
       <div className="modal ancho" onClick={(e) => e.stopPropagation()}>
@@ -304,7 +308,7 @@ function ModalMesas({ local, onCerrar, onCambio }: { local: LocalDTO; onCerrar: 
               </tr>
             </thead>
             <tbody>
-              {mesas.map((m) => (
+              {pagMesas.visibles.map((m) => (
                 <tr key={m.id}>
                   <td>{m.codigo}</td>
                   <td>{m.electores}</td>
@@ -319,6 +323,7 @@ function ModalMesas({ local, onCerrar, onCambio }: { local: LocalDTO; onCerrar: 
             </tbody>
           </table>
         )}
+        <Paginador {...pagMesas} />
         {mesas && mesas.length === 0 && <div className="vacio">Este local todavía no tiene mesas.</div>}
 
         {mostrarNueva ? (

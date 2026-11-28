@@ -3,6 +3,7 @@ import type { CrearUsuarioInput, DniConsultaDTO, RolUsuario, UsuarioDTO } from '
 import ModalCargaMasiva from './CargaMasivaUsuarios';
 import { apiFetch, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 const ROL_LABEL: Record<RolUsuario, string> = {
   ADMIN: 'Administrador global',
@@ -50,6 +51,7 @@ export default function Usuarios() {
 
   const coordinadores = (usuarios ?? []).filter((u) => u.rol === 'COORDINADOR');
 
+  const pag = usePaginacion(usuarios);
   return (
     <div>
       <div className="page-header">
@@ -102,7 +104,7 @@ export default function Usuarios() {
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((u) => (
+              {pag.visibles.map((u) => (
                 <tr key={u.id} style={{ opacity: u.activo ? 1 : 0.55 }}>
                   <td>
                     <strong>{u.nombre}</strong>
@@ -126,6 +128,7 @@ export default function Usuarios() {
             </tbody>
           </table>
         )}
+        <Paginador {...pag} />
       </div>
 
       {mostrarCarga && (

@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth';
 import { comprimirImagen } from '../lib/imagen';
 import { IconCamera, IconClose } from '../components/Icons';
 import { ModalDetalleActa } from './ActasRecibidas';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 interface MesaFila {
   id: string;
@@ -97,7 +98,7 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
       setMesas(null);
       return;
     }
-    const params = new URLSearchParams({ limit: '100' });
+    const params = new URLSearchParams({ limit: '1000' });
     if (busqueda.trim().length >= 2) params.set('search', busqueda.trim());
     if (provinciaFiltro) params.set('provincia', provinciaFiltro);
     if (distritoFiltro) params.set('distrito', distritoFiltro);
@@ -238,6 +239,8 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
 
   const columnaYaEnviada = columnaActiva && columnaActiva.estado !== 'SIN_REGISTRAR';
 
+  const pagMesas = usePaginacion(mesas);
+  const pagGrupos = usePaginacion(gruposPorLocal, 8);
   return (
     <div>
       <div className="page-header">
@@ -277,7 +280,7 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
             <div className="vacio">Todavía no tienes mesas: el administrador debe asignar mesas a tus personeros.</div>
           )}
           {mesas && mesas.length > 0 && gruposPorLocal.length === 0 && <div className="vacio">Sin resultados.</div>}
-          {gruposPorLocal.map((g) => {
+          {pagGrupos.visibles.map((g) => {
             const completas = g.mesas.filter((m) => m.actasRegistradas >= m.actasEsperadas).length;
             return (
               <div key={g.local + g.distrito} className="grupo-local">
@@ -333,6 +336,7 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
               </div>
             );
           })}
+          <Paginador {...pagGrupos} />
         </div>
       )}
 
@@ -385,7 +389,7 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
               </tr>
             </thead>
             <tbody>
-              {mesas.map((m) => (
+              {pagMesas.visibles.map((m) => (
                 <tr key={m.id}>
                   <td>
                     <strong>{m.codigo}</strong>
@@ -411,6 +415,7 @@ export default function LlenarActas({ modo }: { modo?: 'coordinador' } = {}) {
             </tbody>
           </table>
         )}
+        {hayFiltro && <Paginador {...pagMesas} />}
       </div>
       )}
 

@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { FilaImportacionDTO, ResultadoImportacionDTO, RolUsuario } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
 import { IconClose } from '../components/Icons';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 const ROL_LABEL: Record<RolUsuario, string> = {
   ADMIN: 'Administrador',
@@ -87,7 +88,9 @@ export default function ModalCargaMasiva({ onCerrar }: { onCerrar: () => void })
   const conError = filas?.filter((f) => f.accion === 'error').length ?? 0;
   const nuevos = filas?.filter((f) => f.accion === 'crear').length ?? 0;
   const actualizar = filas?.filter((f) => f.accion === 'actualizar').length ?? 0;
-  const visibles = (filas ?? []).filter((f) => !soloErrores || f.accion === 'error');
+  const visiblesTodas = useMemo(() => (filas ?? []).filter((f) => !soloErrores || f.accion === 'error'), [filas, soloErrores]);
+  const pag = usePaginacion(visiblesTodas, 25);
+  const visibles = pag.visibles;
 
   return (
     <div className="modal-fondo">
@@ -245,6 +248,7 @@ export default function ModalCargaMasiva({ onCerrar }: { onCerrar: () => void })
                     </tbody>
                   </table>
                 </div>
+                <Paginador {...pag} />
               </>
             )}
 

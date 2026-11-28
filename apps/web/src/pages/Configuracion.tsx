@@ -3,6 +3,7 @@ import type { BackupDTO, ConfigLectorDTO } from '@erm2026/shared';
 import { apiFetch, ApiError, API_URL } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { IconDownload } from '../components/Icons';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 type Pestana = 'respaldos' | 'lector';
 
@@ -92,6 +93,7 @@ function Respaldos() {
     }
   }
 
+  const pag = usePaginacion(datos?.items, 10);
   return (
     <div className="card">
       <div className="config-encabezado">
@@ -130,7 +132,7 @@ function Respaldos() {
             </tr>
           </thead>
           <tbody>
-            {datos.items.map((b, i) => (
+            {pag.visibles.map((b, i) => (
               <tr key={b.nombre}>
                 <td>
                   {new Date(b.creadoEn).toLocaleString('es-PE')}
@@ -148,6 +150,7 @@ function Respaldos() {
           </tbody>
         </table>
       )}
+      <Paginador {...pag} />
     </div>
   );
 }

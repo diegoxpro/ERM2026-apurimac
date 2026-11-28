@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { LocalDTO, MesaDTO, UsuarioDTO } from '@erm2026/shared';
 import { apiFetch, ApiError } from '../lib/api';
+import Paginador, { usePaginacion } from '../components/Paginador';
 
 interface GeoProvincia {
   nombre: string;
@@ -73,6 +74,8 @@ export default function Asignacion() {
     }
   }
 
+  const pagLocales = usePaginacion(locales, 15);
+  const pagMesas = usePaginacion(mesas);
   return (
     <div>
       <div className="page-header">
@@ -103,7 +106,7 @@ export default function Asignacion() {
           {locales && locales.length === 0 && <div className="vacio">No se encontraron locales.</div>}
 
           <div className="lista-locales">
-            {(locales ?? []).map((l) => (
+            {pagLocales.visibles.map((l) => (
               <button
                 key={l.id}
                 className={`item-local ${localSeleccionado?.id === l.id ? 'activo' : ''}`}
@@ -116,6 +119,7 @@ export default function Asignacion() {
               </button>
             ))}
           </div>
+          <Paginador {...pagLocales} />
         </div>
 
         <div className="card panel-mesas">
@@ -145,7 +149,7 @@ export default function Asignacion() {
                     </tr>
                   </thead>
                   <tbody>
-                    {mesas.map((m) => (
+                    {pagMesas.visibles.map((m) => (
                       <tr key={m.id}>
                         <td>
                           <strong>{m.codigo}</strong>
@@ -170,6 +174,7 @@ export default function Asignacion() {
                   </tbody>
                 </table>
               )}
+              <Paginador {...pagMesas} />
             </>
           )}
         </div>
